@@ -175,7 +175,7 @@ function frame(now){
   occGroup.position.y=1.5*rise+0.06;
   occGroup.userData.mat.opacity=0.95*occA; occGroup.userData.edge.opacity=0.9*occA;
   // camera: slow orbit, dolly in on rebuild
-  const ang=-0.35 + s*0.05, rad=120 - 14*eio((s-6)/4), elev=62 - 10*eio((s-6)/4);
+  const ang=-0.35 + s*0.05, rad=118 - 12*eio((s-6)/4), elev=71 - 8*eio((s-6)/4);
   camera.position.set(Math.sin(ang)*rad, elev, Math.cos(ang)*rad); camera.lookAt(0,2,-2);
   renderer.render(scene,camera);
 }
