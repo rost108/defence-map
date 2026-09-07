@@ -61,7 +61,7 @@ const group=new THREE.Group();scene.add(group);
 const items=[];
 function shapeFrom(ring){const s=new THREE.Shape();ring.forEach((p,i)=>{i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1])});s.closePath();return s;}
 MAPDATA.forEach(o=>{
-  const k=v=>Math.pow(Math.max(0,v)/META.maxN,0.85)*H; const hn=o.occ?0:k(o.n), hs=o.occ?0.25:Math.max(0.15,k(o.s)), hp=o.occ?0:Math.max(0,hn-hs);
+  const hs=1.5, hp=o.occ?0:0.55; // uniform heights: data lives in labels only
   o.rings.forEach(ring=>{
     const sh=shapeFrom(ring);
     const geo=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});geo.rotateX(-Math.PI/2);
@@ -70,11 +70,44 @@ MAPDATA.forEach(o=>{
     let paper=null,ped=null;
     if(hp>0){paper=new THREE.Mesh(geo,matPaper);paper.scale.y=0.001;group.add(paper);
       ped=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),edgeMat);ped.scale.y=0.001;group.add(ped);}
-    items.push({real,ed,paper,ped,hs,hp,occ:o.occ});
+    items.push({real,ed,paper,ped,hs,hp,occ:o.occ,oblast:o});
   });
 });
 // flip so north is up on screen: our y=lat maps to -Z after rotateX; fine.
 group.rotation.y=0;
+// ---- oblast labels (sprites) ----
+const SHORT={'Дніпропетровська':'Дніпро','Івано-Франківська':'Ів.-Франківська','Автономна Республіка Крим':'Крим','Кіровоградська':'Кіровоград','Хмельницька':'Хмельницький','Тернопільська':'Тернопіль','Чернівецька':'Чернівці','Закарпатська':'Закарпаття','Житомирська':'Житомир','Черкаська':'Черкаси','Полтавська':'Полтава','Сумська':'Суми','Чернігівська':'Чернігів','Рівненська':'Рівне','Волинська':'Волинь','Вінницька':'Вінниця','Миколаївська':'Миколаїв','Херсонська':'Херсон','Запорізька':'Запоріжжя','Донецька':'Донеччина','Луганська':'Луганщина','Харківська':'Харків','Львівська':'Львів','Одеська':'Одеса','Київська':'Київщина','Київ':'Київ'};
+const SHOW_LABELS=!/[?&]labels=0/.test(location.search);
+const labels=[];
+function centroid(ring){let a=0,cx=0,cy=0;for(let i=0;i<ring.length;i++){const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length];const f=x1*y2-x2*y1;a+=f;cx+=(x1+x2)*f;cy+=(y1+y2)*f;}a*=0.5;return a?[cx/(6*a),cy/(6*a)]:[ring[0][0],ring[0][1]];}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function makeLabel(o,it){
+  const cv=document.createElement('canvas');cv.width=560;cv.height=176;const g=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthTest:false,depthWrite:false});
+  const sp=new THREE.Sprite(mat);const ar=cv.width/cv.height;const hgt=o.occ?2.0:2.6;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
+  scene.add(sp);
+  const name=SHORT[o.name]||o.name; let last=null;
+  function draw(val){
+    const txt=o.occ?'окуповано':fmt(val); if(txt===last)return; last=txt;
+    g.clearRect(0,0,cv.width,cv.height);
+    const pw=cv.width-16,ph=cv.height-16; g.fillStyle='rgba(10,14,11,.78)'; roundRect(g,8,8,pw,ph,26); g.fill();
+    g.strokeStyle=o.occ?'rgba(124,138,128,.5)':'rgba(196,237,46,.55)'; g.lineWidth=3; roundRect(g,8,8,pw,ph,26); g.stroke();
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillStyle=o.occ?'#9aa89f':'#dfe8dc'; g.font='500 40px "IBM Plex Mono", monospace'; g.letterSpacing='4px';
+    g.fillText(name.toUpperCase(),cv.width/2,58);
+    g.fillStyle=o.occ?'#7c8a80':'#C4ED2E'; g.font=(o.occ?'500 40px':'700 74px')+' "IBM Plex Mono", monospace'; g.letterSpacing=o.occ?'6px':'-2px';
+    g.fillText(txt,cv.width/2,o.occ?118:122);
+    tex.needsUpdate=true;
+  }
+  return {sp,mat,draw,o,it};
+}
+if(SHOW_LABELS) MAPDATA.forEach(o=>{
+  if(o.name==='Севастополь')return;
+  const ring=o.rings.reduce((a,b)=>b.length>a.length?b:a,o.rings[0]); const [cx,cy]=centroid(ring);
+  const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx; L.cy=cy; labels.push(L);
+});
+
 // camera orbit
 let t0=performance.now(), paused=false, pauseAt=0, offset=0;
 const ONCE=/[?&]once=1/.test(location.search); const DUR=ONCE?1e12:17000;
@@ -106,8 +139,17 @@ function frame(now){
       it.ped.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + rebuild*1.6;
       matPaper.opacity=.34*paperAlive; edgeMat.opacity=.35*(0.55+0.45*paperAlive);}
   });
+
+  const lblFade=ease((s-1.2)/1.4)*(s>16?Math.max(0,1-(s-16)):1);
+  labels.forEach(L=>{
+    const o=L.o, it=L.it; const val=o.occ?0:(s<6.5?o.n:o.n-(o.n-o.s)*rebuild);
+    L.draw(val);
+    const top=it?(it.hs*rise+(it.hp||0)*rise*Math.max(0.001,paperAlive)):0.3;
+    L.sp.position.set(L.cx, top+(o.occ?0.9:1.6), -L.cy);
+    L.mat.opacity=(o.occ?0.75:1)*lblFade;
+  });
   // camera: slow orbit, dolly in on rebuild
-  const ang=-0.35 + s*0.05, rad=132 - 16*eio((s-6)/4), elev=54 - 8*eio((s-6)/4);
+  const ang=-0.35 + s*0.05, rad=120 - 14*eio((s-6)/4), elev=62 - 10*eio((s-6)/4);
   camera.position.set(Math.sin(ang)*rad, elev, Math.cos(ang)*rad); camera.lookAt(0,2,-2);
   renderer.render(scene,camera);
 }
