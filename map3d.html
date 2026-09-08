@@ -54,7 +54,7 @@ const m=new THREE.Mesh(new THREE.CircleGeometry(140,64),new THREE.MeshBasicMater
 // materials
 const matReal=new THREE.MeshStandardMaterial({color:0xc9c5bd,roughness:.72,metalness:.05});
 const matOcc=new THREE.MeshStandardMaterial({color:0x3a4440,roughness:.9,metalness:0});
-const matPaper=new THREE.MeshPhysicalMaterial({color:0xC4ED2E,emissive:0x5d7a10,emissiveIntensity:.35,roughness:.35,metalness:0,transparent:true,opacity:.34,depthWrite:false});
+const matPaper=new THREE.MeshPhysicalMaterial({color:0xC4ED2E,emissive:0x5d7a10,emissiveIntensity:.2,roughness:.35,metalness:0,transparent:true,opacity:.34,depthWrite:false});
 const edgeMat=new THREE.LineBasicMaterial({color:0xC4ED2E,transparent:true,opacity:.35});
 const edgeMatDim=new THREE.LineBasicMaterial({color:0x7c8a80,transparent:true,opacity:.25});
 // build oblasts
@@ -156,9 +156,9 @@ function frame(now){
   items.forEach(it=>{
     const hr=it.hs*rise; it.real.scale.y=Math.max(0.001,hr); it.ed.scale.y=Math.max(0.001,hr);
     if(it.paper){const hp=it.hp*rise*Math.max(0.001,paperAlive);
-      it.paper.scale.y=Math.max(0.001,hp); it.paper.position.y=hr + rebuild*1.6; // drifts up as it dissolves
-      it.ped.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + rebuild*1.6;
-      matPaper.opacity=.34*paperAlive; edgeMat.opacity=.35*(0.55+0.45*paperAlive);}
+      it.paper.scale.y=Math.max(0.001,hp); it.paper.position.y=hr + rebuild*0.45; // drifts up as it dissolves
+      it.ped.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + rebuild*0.45;
+      matPaper.opacity=.34*Math.pow(paperAlive,4.5); edgeMat.opacity=.35*(0.55+0.45*Math.pow(paperAlive,3));}
   });
 
   const lblFade=ease((s-1.2)/1.4)*(s>16?Math.max(0,1-(s-16)):1);
