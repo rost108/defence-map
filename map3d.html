@@ -127,7 +127,8 @@ const occGroup=new THREE.Group(); scene.add(occGroup);
 if(SHOW_LABELS) MAPDATA.forEach(o=>{
   if(o.name==='Севастополь')return;
   const ring=o.rings.reduce((a,b)=>b.length>a.length?b:a,o.rings[0]); const [cx,cy]=centroid(ring);
-  const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx; L.cy=cy; labels.push(L);
+  const OFF={'Київська':[5.5,-8.5],'Севастополь':[0,0]}; const off=OFF[o.name]||[0,0];
+  const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx+off[0]; L.cy=cy+off[1]; if(o.name==='Київ')L.sp.renderOrder=12; labels.push(L);
 });
 
 // camera orbit
