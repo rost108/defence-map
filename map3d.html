@@ -56,7 +56,8 @@ const matReal=new THREE.MeshStandardMaterial({color:0xc9c5bd,roughness:.72,metal
 const matOcc=new THREE.MeshStandardMaterial({color:0x3a4440,roughness:.9,metalness:0});
 const matPaper=new THREE.MeshPhysicalMaterial({color:0xC4ED2E,emissive:0x5d7a10,emissiveIntensity:.2,roughness:.35,metalness:0,transparent:true,opacity:.34,depthWrite:false});
 const edgeMat=new THREE.LineBasicMaterial({color:0xC4ED2E,transparent:true,opacity:.35});
-const edgeMatDim=new THREE.LineBasicMaterial({color:0x7c8a80,transparent:true,opacity:.25});
+const edgeMatDim=new THREE.LineBasicMaterial({color:0x9aa69f,transparent:true,opacity:.7});
+const edgeReal=new THREE.LineBasicMaterial({color:0x1f2622,transparent:true,opacity:.92});
 // build oblasts
 const group=new THREE.Group();scene.add(group);
 const items=[];
@@ -67,7 +68,7 @@ MAPDATA.forEach(o=>{
     const sh=shapeFrom(ring);
     const geo=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});geo.rotateX(-Math.PI/2);
     const real=new THREE.Mesh(geo,o.occ?matOcc:matReal);real.scale.y=0.001;group.add(real);
-    const ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),o.occ?edgeMatDim:edgeMat);ed.scale.y=0.001;group.add(ed);
+    const ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),o.occ?edgeMatDim:edgeReal);ed.scale.y=0.001;group.add(ed);
     let paper=null,ped=null;
     if(hp>0){paper=new THREE.Mesh(geo,matPaper);paper.scale.y=0.001;group.add(paper);
       ped=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),edgeMat);ped.scale.y=0.001;group.add(ped);}
@@ -158,7 +159,7 @@ function frame(now){
     if(it.paper){const hp=it.hp*rise*Math.max(0.001,paperAlive);
       it.paper.scale.y=Math.max(0.001,hp); it.paper.position.y=hr + rebuild*0.45; // drifts up as it dissolves
       it.ped.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + rebuild*0.45;
-      matPaper.opacity=.34*Math.pow(paperAlive,4.5); edgeMat.opacity=.35*(0.55+0.45*Math.pow(paperAlive,3));}
+      matPaper.opacity=.34*Math.pow(paperAlive,4.5); edgeMat.opacity=.6*Math.pow(paperAlive,2.5);}
   });
 
   const lblFade=ease((s-1.2)/1.4)*(s>16?Math.max(0,1-(s-16)):1);
