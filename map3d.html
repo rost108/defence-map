@@ -130,34 +130,42 @@ if(SHOW_LABELS) MAPDATA.forEach(o=>{
   const OFF={'Київська':[5.5,-8.5],'Севастополь':[0,0]}; const off=OFF[o.name]||[0,0];
   const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx+off[0]; L.cy=cy+off[1]; if(o.name==='Київ')L.sp.renderOrder=12; labels.push(L);
 });
-// ---- auto de-overlap of labels: screen-space at the final camera pose (16:9), unprojected back to the map ----
+// ---- auto de-overlap of labels: screen-space across ALL camera poses of the timeline (16:9), unprojected back to the map ----
 (function relax(){
   const cam=new THREE.PerspectiveCamera(36,16/9,0.1,800);
-  const s=12, ang=-0.35+s*0.05, rad=118-12, elev=71-8;
-  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(0,2,-2); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  const W=1920,H=1080, PAD=10, MAXPX=140;
+  const eioL=t=>{t=Math.max(0,Math.min(1,t));return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
+  const setCam=s=>{const ang=-0.35+s*0.05, rad=118-12*eioL((s-6)/4), elev=71-8*eioL((s-6)/4);
+    cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(0,2,-2); cam.updateMatrixWorld(); cam.updateProjectionMatrix();};
+  const W=1920,H=1080, PAD=12, MAXD=13; // MAXD in map units
+  const poses=[]; for(let s=0;s<=16.5;s+=0.75)poses.push(s);
   const toScr=(x,y,z)=>{const v=new THREE.Vector3(x,y,z).project(cam);return [(v.x+1)/2*W,(1-v.y)/2*H];};
-  const items=labels.map(L=>{const y=(L.o.occ?0.9:1.6)+1.5; const [sx,sy]=toScr(L.cx,y,-L.cy);
-    const [sx2]=toScr(L.cx+L.sp.scale.x/2,y,-L.cy); const hw=Math.abs(sx2-sx), hh=hw*L.sp.scale.y/L.sp.scale.x;
-    return {L,y,x:sx,y0:sy,ox:sx,oy:sy,hw,hh};});
-  for(let iter=0;iter<400;iter++){
-    let moved=false;
-    for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){
-      const A=items[i],B=items[j]; const dx=B.x-A.x, dy=B.y0-A.y0;
-      const ox=A.hw+B.hw+PAD-Math.abs(dx), oy=A.hh+B.hh+PAD-Math.abs(dy);
-      if(ox>0&&oy>0){moved=true;
-        if(oy<=ox){const m=(dy>=0?1:-1)*oy*0.5*0.7;A.y0-=m;B.y0+=m;}
-        else{const m=(dx>=0?1:-1)*ox*0.5*0.7;A.x-=m;B.x+=m;}
+  const items=labels.map(L=>({L,y:(L.o.occ?0.9:1.6)+1.5,ox:L.cx,oy:L.cy}));
+  const unproj=(sx,sy,y)=>{const nd=new THREE.Vector3(sx/W*2-1,1-sy/H*2,0.5).unproject(cam);const d=nd.sub(cam.position).normalize();const t=(y-cam.position.y)/d.y;return cam.position.clone().add(d.multiplyScalar(t));};
+  for(let iter=0;iter<60;iter++){
+    let movedAny=false;
+    for(const s of poses){
+      setCam(s);
+      const B=items.map(I=>{const [sx,sy]=toScr(I.L.cx,I.y,-I.L.cy);const [sx2]=toScr(I.L.cx+I.L.sp.scale.x/2,I.y,-I.L.cy);const hw=Math.abs(sx2-sx);return {I,x:sx,y:sy,hw,hh:hw*I.L.sp.scale.y/I.L.sp.scale.x,dx:0,dy:0};});
+      let moved=false;
+      for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){
+        const A=B[i],C=B[j]; const dx=C.x-A.x, dy=C.y-A.y;
+        const ox=A.hw+C.hw+PAD-Math.abs(dx), oy=A.hh+C.hh+PAD-Math.abs(dy);
+        if(ox>0&&oy>0){moved=true;
+          if(oy<=ox){const m=(dy>=0?1:-1)*oy*0.5*0.6;A.dy-=m;C.dy+=m;}
+          else{const m=(dx>=0?1:-1)*ox*0.5*0.6;A.dx-=m;C.dx+=m;}
+        }
       }
+      if(!moved)continue; movedAny=true;
+      B.forEach(b=>{if(!b.dx&&!b.dy)return;const P=unproj(b.x+b.dx,b.y+b.dy,b.I.y);b.I.L.cx=P.x;b.I.L.cy=-P.z;});
     }
-    items.forEach(I=>{I.x+=(I.ox-I.x)*0.02;I.y0+=(I.oy-I.y0)*0.02;
-      const ddx=I.x-I.ox,ddy=I.y0-I.oy,d=Math.hypot(ddx,ddy); if(d>MAXPX){I.x=I.ox+ddx/d*MAXPX;I.y0=I.oy+ddy/d*MAXPX;}});
-    if(!moved)break;
+    items.forEach(I=>{const L=I.L;L.cx+=(I.ox-L.cx)*0.02;L.cy+=(I.oy-L.cy)*0.02;
+      const ddx=L.cx-I.ox,ddy=L.cy-I.oy,d=Math.hypot(ddx,ddy);if(d>MAXD){L.cx=I.ox+ddx/d*MAXD;L.cy=I.oy+ddy/d*MAXD;}});
+    if(!movedAny)break;
   }
-  // unproject moved screen points back onto the label plane y=I.y
-  items.forEach(I=>{const ndc=new THREE.Vector3(I.x/W*2-1,1-I.y0/H*2,0.5).unproject(cam);
-    const dir=ndc.sub(cam.position).normalize(); const t=(I.y-cam.position.y)/dir.y; const P=cam.position.clone().add(dir.multiplyScalar(t));
-    I.L.cx=P.x; I.L.cy=-P.z;});
+  // report leftovers (debug)
+  const left=[];for(const s of poses){setCam(s);const B=items.map(I=>{const [sx,sy]=toScr(I.L.cx,I.y,-I.L.cy);const [sx2]=toScr(I.L.cx+I.L.sp.scale.x/2,I.y,-I.L.cy);const hw=Math.abs(sx2-sx);return {n:I.L.o.name,x:sx,y:sy,hw,hh:hw*I.L.sp.scale.y/I.L.sp.scale.x};});
+    for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const A=B[i],C=B[j];if(Math.abs(C.x-A.x)<A.hw+C.hw&&Math.abs(C.y-A.y)<A.hh+C.hh)left.push(s+':'+A.n+'x'+C.n);}}
+  window.__lblLeft=left;
 })();
 
 // camera orbit
