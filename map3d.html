@@ -130,31 +130,40 @@ if(SHOW_LABELS) MAPDATA.forEach(o=>{
   const OFF={'Київська':[5.5,-8.5],'Севастополь':[0,0]}; const off=OFF[o.name]||[0,0];
   const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx+off[0]; L.cy=cy+off[1]; if(o.name==='Київ')L.sp.renderOrder=12; labels.push(L);
 });
-// ---- auto de-overlap of labels (ground-plane boxes, spring to origin) ----
+// ---- auto de-overlap of labels: screen-space at the final camera pose (16:9), unprojected back to the map ----
 (function relax(){
-  labels.forEach(L=>{L.ox=L.cx;L.oy=L.cy;});
-  const PAD=0.6, MAXD=11;
-  for(let iter=0;iter<260;iter++){
+  const cam=new THREE.PerspectiveCamera(36,16/9,0.1,800);
+  const s=12, ang=-0.35+s*0.05, rad=118-12, elev=71-8;
+  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(0,2,-2); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const W=1920,H=1080, PAD=10, MAXPX=140;
+  const toScr=(x,y,z)=>{const v=new THREE.Vector3(x,y,z).project(cam);return [(v.x+1)/2*W,(1-v.y)/2*H];};
+  const items=labels.map(L=>{const y=(L.o.occ?0.9:1.6)+1.5; const [sx,sy]=toScr(L.cx,y,-L.cy);
+    const [sx2]=toScr(L.cx+L.sp.scale.x/2,y,-L.cy); const hw=Math.abs(sx2-sx), hh=hw*L.sp.scale.y/L.sp.scale.x;
+    return {L,y,x:sx,y0:sy,ox:sx,oy:sy,hw,hh};});
+  for(let iter=0;iter<400;iter++){
     let moved=false;
-    for(let i=0;i<labels.length;i++)for(let j=i+1;j<labels.length;j++){
-      const A=labels[i],B=labels[j];
-      const dx=B.cx-A.cx, dy=B.cy-A.cy;
-      const ox=(A.w+B.w)/2+PAD-Math.abs(dx), oy=(A.h+B.h)/2+PAD-Math.abs(dy);
+    for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){
+      const A=items[i],B=items[j]; const dx=B.x-A.x, dy=B.y0-A.y0;
+      const ox=A.hw+B.hw+PAD-Math.abs(dx), oy=A.hh+B.hh+PAD-Math.abs(dy);
       if(ox>0&&oy>0){moved=true;
-        // prefer vertical separation (cheaper on a wide map), else horizontal
-        if(oy<=ox*0.9){const s=(dy>=0?1:-1)*oy*0.5*0.6;A.cy-=s;B.cy+=s;}
-        else{const s=(dx>=0?1:-1)*ox*0.5*0.6;A.cx-=s;B.cx+=s;}
+        if(oy<=ox){const m=(dy>=0?1:-1)*oy*0.5*0.7;A.y0-=m;B.y0+=m;}
+        else{const m=(dx>=0?1:-1)*ox*0.5*0.7;A.x-=m;B.x+=m;}
       }
     }
-    labels.forEach(L=>{L.cx+=(L.ox-L.cx)*0.03;L.cy+=(L.oy-L.cy)*0.03;
-      const ddx=L.cx-L.ox,ddy=L.cy-L.oy,d=Math.hypot(ddx,ddy); if(d>MAXD){L.cx=L.ox+ddx/d*MAXD;L.cy=L.oy+ddy/d*MAXD;}});
+    items.forEach(I=>{I.x+=(I.ox-I.x)*0.02;I.y0+=(I.oy-I.y0)*0.02;
+      const ddx=I.x-I.ox,ddy=I.y0-I.oy,d=Math.hypot(ddx,ddy); if(d>MAXPX){I.x=I.ox+ddx/d*MAXPX;I.y0=I.oy+ddy/d*MAXPX;}});
     if(!moved)break;
   }
+  // unproject moved screen points back onto the label plane y=I.y
+  items.forEach(I=>{const ndc=new THREE.Vector3(I.x/W*2-1,1-I.y0/H*2,0.5).unproject(cam);
+    const dir=ndc.sub(cam.position).normalize(); const t=(I.y-cam.position.y)/dir.y; const P=cam.position.clone().add(dir.multiplyScalar(t));
+    I.L.cx=P.x; I.L.cy=-P.z;});
 })();
 
 // camera orbit
 let t0=performance.now(), paused=false, pauseAt=0, offset=0;
 const ONCE=/[?&]once=1/.test(location.search); const DUR=ONCE?1e12:17000;
+const SEEK=(location.search.match(/[?&]t=([\d.]+)/)||[])[1]; if(SEEK){offset=-SEEK*1000;}
 function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
 function eio(x){x=x<0?0:x>1?1:x;return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
 const numEl=document.getElementById('num'),lbl=document.getElementById('lbl'),pct=document.getElementById('pct'),phTx=document.getElementById('phaseTx'),phSm=document.getElementById('phaseSm'),ph=document.getElementById('phase');
