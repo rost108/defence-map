@@ -80,14 +80,14 @@ group.rotation.y=0;
 // ---- oblast labels (sprites) ----
 const SHORT={'Дніпропетровська':'Дніпро','Івано-Франківська':'Ів.-Франківська','Автономна Республіка Крим':'Крим','Кіровоградська':'Кіровоград','Хмельницька':'Хмельницький','Тернопільська':'Тернопіль','Чернівецька':'Чернівці','Закарпатська':'Закарпаття','Житомирська':'Житомир','Черкаська':'Черкаси','Полтавська':'Полтава','Сумська':'Суми','Чернігівська':'Чернігів','Рівненська':'Рівне','Волинська':'Волинь','Вінницька':'Вінниця','Миколаївська':'Миколаїв','Херсонська':'Херсон','Запорізька':'Запоріжжя','Донецька':'Донеччина','Луганська':'Луганщина','Харківська':'Харків','Львівська':'Львів','Одеська':'Одеса','Київська':'Київщина','Київ':'Київ'};
 const SHOW_LABELS=!/[?&]labels=0/.test(location.search);
-const labels=[];
+const labels=[]; window.__dbg={labels,camera,THREE};
 function centroid(ring){let a=0,cx=0,cy=0;for(let i=0;i<ring.length;i++){const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length];const f=x1*y2-x2*y1;a+=f;cx+=(x1+x2)*f;cy+=(y1+y2)*f;}a*=0.5;return a?[cx/(6*a),cy/(6*a)]:[ring[0][0],ring[0][1]];}
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function makeLabel(o,it){
   const cv=document.createElement('canvas');cv.width=560;cv.height=176;const g=cv.getContext('2d');
   const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
   const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthTest:false,depthWrite:false});
-  const sp=new THREE.Sprite(mat);const ar=cv.width/cv.height;const hgt=o.occ?2.0:2.6;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
+  const sp=new THREE.Sprite(mat);const ar=cv.width/cv.height;const hgt=o.occ?1.9:2.45;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
   scene.add(sp);
   const name=SHORT[o.name]||o.name; let last=null;
   function draw(val){
@@ -102,7 +102,7 @@ function makeLabel(o,it){
     g.fillText(txt,cv.width/2,o.occ?118:122);
     tex.needsUpdate=true;
   }
-  return {sp,mat,draw,o,it};
+  return {sp,mat,draw,o,it,w:hgt*ar,h:hgt/0.88};
 }
 
 // ---- occupied zone overlay (DeepState contour, hatched) ----
@@ -130,6 +130,27 @@ if(SHOW_LABELS) MAPDATA.forEach(o=>{
   const OFF={'Київська':[5.5,-8.5],'Севастополь':[0,0]}; const off=OFF[o.name]||[0,0];
   const it=items.find(x=>x.oblast===o); const L=makeLabel(o,it); L.cx=cx+off[0]; L.cy=cy+off[1]; if(o.name==='Київ')L.sp.renderOrder=12; labels.push(L);
 });
+// ---- auto de-overlap of labels (ground-plane boxes, spring to origin) ----
+(function relax(){
+  labels.forEach(L=>{L.ox=L.cx;L.oy=L.cy;});
+  const PAD=0.6, MAXD=11;
+  for(let iter=0;iter<260;iter++){
+    let moved=false;
+    for(let i=0;i<labels.length;i++)for(let j=i+1;j<labels.length;j++){
+      const A=labels[i],B=labels[j];
+      const dx=B.cx-A.cx, dy=B.cy-A.cy;
+      const ox=(A.w+B.w)/2+PAD-Math.abs(dx), oy=(A.h+B.h)/2+PAD-Math.abs(dy);
+      if(ox>0&&oy>0){moved=true;
+        // prefer vertical separation (cheaper on a wide map), else horizontal
+        if(oy<=ox*0.9){const s=(dy>=0?1:-1)*oy*0.5*0.6;A.cy-=s;B.cy+=s;}
+        else{const s=(dx>=0?1:-1)*ox*0.5*0.6;A.cx-=s;B.cx+=s;}
+      }
+    }
+    labels.forEach(L=>{L.cx+=(L.ox-L.cx)*0.03;L.cy+=(L.oy-L.cy)*0.03;
+      const ddx=L.cx-L.ox,ddy=L.cy-L.oy,d=Math.hypot(ddx,ddy); if(d>MAXD){L.cx=L.ox+ddx/d*MAXD;L.cy=L.oy+ddy/d*MAXD;}});
+    if(!moved)break;
+  }
+})();
 
 // camera orbit
 let t0=performance.now(), paused=false, pauseAt=0, offset=0;
