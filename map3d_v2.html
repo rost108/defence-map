@@ -56,22 +56,34 @@ const META={"maxN": 7316, "total": 73187, "rec": 33392, "nr": 2546, "real": 3724
 const H=8;
 const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
+const HQ=/[?&]rec=1/.test(location.search);renderer.setPixelRatio(Math.min(devicePixelRatio,HQ?3:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;const MAXA=renderer.capabilities.getMaxAnisotropy();renderer.setSize(innerWidth,innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x0E1310);scene.fog=new THREE.Fog(0x0E1310,150,300);
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.1,800);
 // lights
 scene.add(new THREE.HemisphereLight(0xdfe8dc,0x0a100c,0.55));
-const key=new THREE.DirectionalLight(0xfff4dc,1.35);key.position.set(60,120,40);scene.add(key);
+const key=new THREE.DirectionalLight(0xfff4dc,1.35);key.position.set(65,120,25);scene.add(key);
+key.castShadow=true;key.shadow.mapSize.set(4096,4096);const sc=key.shadow.camera;sc.left=-80;sc.right=80;sc.top=80;sc.bottom=-80;sc.near=10;sc.far=320;key.shadow.bias=-0.0004;key.shadow.normalBias=0.04;key.shadow.radius=5;
+(function(){const m=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.ShadowMaterial({opacity:.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=-0.03;m.receiveShadow=true;m.renderOrder=1;scene.add(m);})();
 const rim=new THREE.DirectionalLight(0xC4ED2E,0.5);rim.position.set(-80,40,-60);scene.add(rim);
 // stage ground: radial gradient disc
-(function(){const cv=document.createElement('canvas');cv.width=cv.height=512;const g=cv.getContext('2d');
-const gr=g.createRadialGradient(256,256,20,256,256,256);gr.addColorStop(0,'#1a231c');gr.addColorStop(.55,'#121a15');gr.addColorStop(1,'rgba(14,19,16,0)');
-g.fillStyle=gr;g.fillRect(0,0,512,512);const tex=new THREE.CanvasTexture(cv);
+(function(){const cv=document.createElement('canvas');cv.width=cv.height=1024;const g=cv.getContext('2d');
+const gr=g.createRadialGradient(512,512,40,512,512,512);gr.addColorStop(0,'#1a231c');gr.addColorStop(.55,'#121a15');gr.addColorStop(1,'rgba(14,19,16,0)');
+g.fillStyle=gr;g.fillRect(0,0,1024,1024);{const id=g.getImageData(0,0,1024,1024),d=id.data;for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*5;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}g.putImageData(id,0,0);}const tex=new THREE.CanvasTexture(cv);
 const m=new THREE.Mesh(new THREE.CircleGeometry(140,64),new THREE.MeshBasicMaterial({map:tex,transparent:true}));m.rotation.x=-Math.PI/2;m.position.y=-0.05;scene.add(m);})();
 // materials
-const matReal=new THREE.MeshStandardMaterial({color:0xc9c5bd,roughness:.72,metalness:.05});
+function concreteTex(){ // procedural cast concrete: cloudy tone + fine grain + pores (one tile covers the whole map, so no seams)
+  const N=2048,cv=document.createElement('canvas');cv.width=cv.height=N;const g=cv.getContext('2d');
+  g.fillStyle='rgb(236,236,236)';g.fillRect(0,0,N,N);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  [[6,.22],[14,.18],[36,.14],[90,.11],[220,.09]].forEach(([s,a])=>{const c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');const id=x.createImageData(s,s);
+    for(let i=0;i<id.data.length;i+=4){const v=170+Math.random()*85;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}x.putImageData(id,0,0);g.globalAlpha=a;g.drawImage(c,0,0,N,N);});
+  g.globalAlpha=1;const id=g.getImageData(0,0,N,N),d=id.data;for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*26;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}g.putImageData(id,0,0);
+  for(let k=0;k<3000;k++){const x=Math.random()*N,y=Math.random()*N,r=.4+Math.random()*1.3;g.fillStyle='rgba(70,70,66,'+(.08+Math.random()*.2)+')';g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+  for(let k=0;k<700;k++){const x=Math.random()*N,y=Math.random()*N;g.fillStyle='rgba(255,255,255,'+(.05+Math.random()*.12)+')';g.beginPath();g.arc(x,y,.8+Math.random()*1.6,0,7);g.fill();}
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1/112,1/112);t.offset.set(.5,.5);t.anisotropy=MAXA;return t;}
+const texC=concreteTex();const texCcol=texC.clone();texCcol.colorSpace=THREE.SRGBColorSpace;texCcol.needsUpdate=true;
+const matReal=new THREE.MeshStandardMaterial({color:0xd6d2ca,map:texCcol,bumpMap:texC,bumpScale:.32,roughnessMap:texC,roughness:.95,metalness:.03});
 const matOcc=new THREE.MeshStandardMaterial({color:0x3a4440,roughness:.9,metalness:0});
 const matPaper=new THREE.MeshPhysicalMaterial({color:0xC4ED2E,emissive:0x5d7a10,emissiveIntensity:.2,roughness:.35,metalness:0,transparent:true,opacity:.34,depthWrite:false});
 const edgeMat=new THREE.LineBasicMaterial({color:0xC4ED2E,transparent:true,opacity:.35});
@@ -80,6 +92,18 @@ const edgeReal=new THREE.LineBasicMaterial({color:0x1f2622,transparent:true,opac
 // build oblasts
 const group=new THREE.Group();scene.add(group);
 const items=[];
+const ribReal=new THREE.MeshBasicMaterial({color:0x2b332e,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+const ribOcc=new THREE.MeshBasicMaterial({color:0x8d9992,transparent:true,opacity:.8,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+const ribPaper=new THREE.MeshBasicMaterial({color:0xC4ED2E,transparent:true,opacity:.35,depthWrite:false});
+function ribbon(ring,w){ // mitered strip along the top outline; geometry space: top of the unit extrusion is y=1
+  const n=ring.length,pos=[],idx=[];const P=i=>ring[(i+n)%n];
+  for(let i=0;i<n;i++){const a=P(i-1),b=P(i),c=P(i+1);let d1x=b[0]-a[0],d1y=b[1]-a[1],d2x=c[0]-b[0],d2y=c[1]-b[1];
+    let l1=Math.hypot(d1x,d1y)||1,l2=Math.hypot(d2x,d2y)||1;d1x/=l1;d1y/=l1;d2x/=l2;d2y/=l2;
+    let nx=-(d1y+d2y),ny=(d1x+d2x);let ln=Math.hypot(nx,ny);if(ln<1e-6){nx=-d1y;ny=d1x;ln=1;}nx/=ln;ny/=ln;
+    const cosH=Math.max(.72,nx*(-d1y)+ny*d1x);const m=w/2/cosH;
+    pos.push(b[0]+nx*m,1,-(b[1]+ny*m), b[0]-nx*m,1,-(b[1]-ny*m));}
+  for(let i=0;i<n;i++){const j=(i+1)%n;idx.push(2*i,2*i+1,2*j, 2*i+1,2*j+1,2*j);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);return g;}
 function shapeFrom(ring){const s=new THREE.Shape();ring.forEach((p,i)=>{i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1])});s.closePath();return s;}
 (function(){let lo=1e9,hi=-1e9;MAPDATA.forEach(o=>{const r=o.rings.reduce((a,b)=>b.length>a.length?b:a,o.rings[0]);o.mx=r.reduce((a,p)=>a+p[0],0)/r.length;lo=Math.min(lo,o.mx);hi=Math.max(hi,o.mx);});MAPDATA.forEach(o=>o.u=(o.mx-lo)/(hi-lo));})();
 MAPDATA.forEach(o=>{
@@ -87,12 +111,14 @@ MAPDATA.forEach(o=>{
   o.rings.forEach(ring=>{
     const sh=shapeFrom(ring);
     const geo=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});geo.rotateX(-Math.PI/2);
-    const real=new THREE.Mesh(geo,o.occ?matOcc:matReal);real.scale.y=0.001;group.add(real);
+    const real=new THREE.Mesh(geo,o.occ?matOcc:matReal);real.scale.y=0.001;real.castShadow=true;real.receiveShadow=true;group.add(real);
+    const rg=ribbon(ring,o.occ?0.08:0.10);const rib=new THREE.Mesh(rg,o.occ?ribOcc:ribReal);rib.material.side=THREE.DoubleSide;rib.scale.y=0.001;group.add(rib);let prib=null;
     const ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),o.occ?edgeMatDim:edgeReal);ed.scale.y=0.001;group.add(ed);
     let paper=null,ped=null;
     if(hp>0){paper=new THREE.Mesh(geo,matPaper);paper.scale.y=0.001;group.add(paper);
-      ped=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),edgeMat);ped.scale.y=0.001;group.add(ped);}
-    items.push({real,ed,paper,ped,hs,hp,occ:o.occ,oblast:o});
+      ped=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),edgeMat);ped.scale.y=0.001;group.add(ped);
+      ribPaper.side=THREE.DoubleSide;prib=new THREE.Mesh(rg,ribPaper);prib.scale.y=0.001;prib.renderOrder=3;group.add(prib);}
+    items.push({real,ed,paper,ped,rib,prib,hs,hp,occ:o.occ,oblast:o});
   });
 });
 // flip so north is up on screen: our y=lat maps to -Z after rotateX; fine.
@@ -105,22 +131,22 @@ const labels=[]; window.__dbg={labels,camera,THREE};
 function centroid(ring){let a=0,cx=0,cy=0;for(let i=0;i<ring.length;i++){const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length];const f=x1*y2-x2*y1;a+=f;cx+=(x1+x2)*f;cy+=(y1+y2)*f;}a*=0.5;return a?[cx/(6*a),cy/(6*a)]:[ring[0][0],ring[0][1]];}
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function makeLabel(o,it){
-  const cv=document.createElement('canvas');cv.width=560;cv.height=176;const g=cv.getContext('2d');
-  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
+  const K=2,cv=document.createElement('canvas');cv.width=560*K;cv.height=176*K;const g=cv.getContext('2d');g.scale(K,K);
+  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=MAXA;tex.generateMipmaps=true;tex.minFilter=THREE.LinearMipmapLinearFilter;
   const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthTest:false,depthWrite:false});
-  const sp=new THREE.Sprite(mat);const ar=cv.width/cv.height;const hgt=o.occ?1.9:2.45;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
+  const sp=new THREE.Sprite(mat);const ar=560/176;const hgt=o.occ?1.9:2.45;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
   scene.add(sp);
   const name=SHORT[o.name]||o.name; let last=null;
   function draw(val){
     const txt=o.occ?'окуповано':fmt(val); if(txt===last)return; last=txt;
-    g.clearRect(0,0,cv.width,cv.height);
-    const pw=cv.width-16,ph=cv.height-16; g.fillStyle='rgba(10,14,11,.78)'; roundRect(g,8,8,pw,ph,26); g.fill();
+    g.clearRect(0,0,560,176);
+    const pw=560-16,ph=176-16; g.fillStyle='rgba(10,14,11,.78)'; roundRect(g,8,8,pw,ph,26); g.fill();
     g.strokeStyle=o.occ?'rgba(124,138,128,.5)':'rgba(196,237,46,.55)'; g.lineWidth=3; roundRect(g,8,8,pw,ph,26); g.stroke();
     g.textAlign='center'; g.textBaseline='middle';
     g.fillStyle=o.occ?'#9aa89f':'#dfe8dc'; g.font='500 40px "IBM Plex Mono", monospace'; g.letterSpacing='4px';
-    g.fillText(name.toUpperCase(),cv.width/2,58);
+    g.fillText(name.toUpperCase(),280,58);
     g.fillStyle=o.occ?'#7c8a80':'#C4ED2E'; g.font=(o.occ?'500 40px':'700 74px')+' "IBM Plex Mono", monospace'; g.letterSpacing=o.occ?'6px':'-2px';
-    g.fillText(txt,cv.width/2,o.occ?118:122);
+    g.fillText(txt,280,o.occ?118:122);
     tex.needsUpdate=true;
   }
   return {sp,mat,draw,o,it,w:hgt*ar,h:hgt/0.88};
@@ -129,11 +155,11 @@ function makeLabel(o,it){
 // ---- occupied zone overlay (DeepState contour, hatched) ----
 const occGroup=new THREE.Group(); scene.add(occGroup);
 (function(){
-  const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d');
+  const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.scale(4,4);
   g.fillStyle='rgba(34,40,36,0.72)';g.fillRect(0,0,64,64);
   g.strokeStyle='rgba(158,168,160,0.85)';g.lineWidth=5;
   for(let k=-64;k<128;k+=16){g.beginPath();g.moveTo(k,64);g.lineTo(k+64,0);g.stroke();}
-  const tex=new THREE.CanvasTexture(cv);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(0.55,0.55);tex.colorSpace=THREE.SRGBColorSpace;
+  const tex=new THREE.CanvasTexture(cv);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(0.55,0.55);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=MAXA;
   const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   const edge=new THREE.LineBasicMaterial({color:0xb8c2ba,transparent:true,opacity:0});
   OCCZ.forEach(poly=>{
@@ -244,11 +270,11 @@ function frame(now){
   setPhase(s<A0-0.2?0:(s<endT?1:2));
   const fade = s>16 ? 1-(s-16) : 1; document.body.style.opacity=Math.max(0,Math.min(1,fade*1.4));
   items.forEach(it=>{
-    const hr=it.hs*rise; it.real.scale.y=Math.max(0.001,hr); it.ed.scale.y=Math.max(0.001,hr);
+    const hr=it.hs*rise; it.real.scale.y=Math.max(0.001,hr); it.ed.scale.y=Math.max(0.001,hr); it.rib.scale.y=Math.max(0.001,hr); it.rib.position.y=0.006;
     if(it.paper){const hp=it.hp*rise*Math.max(0.001,it.alive);
       it.paper.scale.y=Math.max(0.001,hp); it.paper.position.y=hr + (1-it.alive)*0.45; // drifts up as it dissolves
-      it.ped.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + (1-it.alive)*0.45;
-      matPaper.opacity=.34*Math.pow(paperAlive,2.2); edgeMat.opacity=.6*Math.pow(paperAlive,1.6);}
+      it.ped.scale.y=Math.max(0.001,hp); it.prib.scale.y=Math.max(0.001,hp); it.ped.position.y=hr + (1-it.alive)*0.45;
+      matPaper.opacity=.34*Math.pow(paperAlive,2.2); edgeMat.opacity=.6*Math.pow(paperAlive,1.6); ribPaper.opacity=Math.min(.9,edgeMat.opacity*1.3); it.prib.position.y=it.paper.position.y+0.004; it.prib.visible=it.alive>0.02;}
   });
 
   const lblFade=ease((s-1.2)/1.4)*(s>16?Math.max(0,1-(s-16)):1);
