@@ -99,6 +99,7 @@ MAPDATA.forEach(o=>{
 group.rotation.y=0;
 // ---- oblast labels (sprites) ----
 const SHORT={'Дніпропетровська':'Дніпро','Івано-Франківська':'Ів.-Франківська','Автономна Республіка Крим':'Крим','Кіровоградська':'Кіровоград','Хмельницька':'Хмельницький','Тернопільська':'Тернопіль','Чернівецька':'Чернівці','Закарпатська':'Закарпаття','Житомирська':'Житомир','Черкаська':'Черкаси','Полтавська':'Полтава','Сумська':'Суми','Чернігівська':'Чернігів','Рівненська':'Рівне','Волинська':'Волинь','Вінницька':'Вінниця','Миколаївська':'Миколаїв','Херсонська':'Херсон','Запорізька':'Запоріжжя','Донецька':'Донеччина','Луганська':'Луганщина','Харківська':'Харків','Львівська':'Львів','Одеська':'Одеса','Київська':'Київщина','Київ':'Київ'};
+if(/[?&]rec=1/.test(location.search)){document.getElementById('hint').style.display='none';}
 const SHOW_LABELS=!/[?&]labels=0/.test(location.search);
 const labels=[]; window.__dbg={labels,camera,THREE};
 function centroid(ring){let a=0,cx=0,cy=0;for(let i=0;i<ring.length;i++){const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length];const f=x1*y2-x2*y1;a+=f;cx+=(x1+x2)*f;cy+=(y1+y2)*f;}a*=0.5;return a?[cx/(6*a),cy/(6*a)]:[ring[0][0],ring[0][1]];}
@@ -190,6 +191,7 @@ if(SHOW_LABELS) MAPDATA.forEach(o=>{
 
 // camera orbit
 let t0=performance.now(), paused=false, pauseAt=0, offset=0;
+const REC=/[?&]rec=1/.test(location.search);
 const ONCE=/[?&]once=1/.test(location.search); const DUR=ONCE?1e12:17000;
 const SEEK=(location.search.match(/[?&]t=([\d.]+)/)||[])[1]; if(SEEK){offset=-SEEK*1000;}
 function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
@@ -222,7 +224,7 @@ function setPhase(p){if(p===lastPhase)return;lastPhase=p;
 function frame(now){
   requestAnimationFrame(frame);
   if(paused)return;
-  const tm=(now-t0-offset)%DUR; const s=ONCE?Math.min(tm/1000,15.5):tm/1000;
+  const tm=REC?((window.__recT||0)%DUR):(now-t0-offset)%DUR; const s=ONCE?Math.min(tm/1000,15.5):tm/1000;
   // phases: 0-2.6 rise | 2.6-6.5 hold paper | 6.5-9.5 rebuild | 9.5-16 hold real | 16-17 fade/reset
   const rise=ease(s/2.6);
   // two-step sift, swept west->east: A = minus «рекомендоване», B = minus «не рекомендоване»
