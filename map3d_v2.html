@@ -19,24 +19,25 @@ body{font-family:'IBM Plex Mono',ui-monospace,monospace;color:var(--tx)}
 #legend i{display:inline-block;width:12px;height:12px;margin-right:9px;vertical-align:-1px;border-radius:2px}
 #hint{left:50%;bottom:16px;transform:translateX(-50%);font-size:11px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
 #lbl{max-width:52vw}
-#split{width:min(400px,36vw);margin-bottom:16px;opacity:0;transition:opacity .8s}
+#split{display:flex;align-items:center;gap:16px;margin-bottom:18px;opacity:0;transition:opacity .8s}
 #split.on{opacity:1}
-#splitTop{height:34px;position:relative}
-#bar{display:flex;height:22px;transform-origin:left center}
-.seg{position:relative;height:100%;border-radius:2px;overflow:hidden;transition:background-color .7s}
-.seg .fill{position:absolute;top:0;bottom:0;right:0;background:var(--lime)}
-#segReal{background:var(--lime)}#segReal.done{background:#c9c5bd}
-#segRec{box-shadow:inset 0 0 0 1px rgba(143,163,150,.65)}
-#segNr{box-shadow:inset 0 0 0 1px rgba(143,163,150,.55);background:repeating-linear-gradient(45deg,rgba(158,168,160,.8) 0 2px,transparent 2px 5px)}
-#splitBot{display:flex;margin-top:9px}
-.sl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);line-height:1.45;opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s;white-space:nowrap}
+#pie{width:140px;height:140px;flex:none;transform:rotate(-90deg)}
+#pie circle{fill:none;stroke-width:26}
+#aReal{stroke:var(--lime);transition:stroke .7s}#aReal.done{stroke:#c9c5bd}
+#aRecBg{stroke:rgba(143,163,150,.2)}#aNrBg{stroke:url(#hatchP)}
+#aRecL,#aNrL{stroke:var(--lime)}
+#pieC{position:absolute;left:0;top:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:var(--tx);letter-spacing:-.02em;opacity:0;transition:opacity .8s}
+#pieC.on{opacity:1}
+#pieWrap{position:relative;flex:none}
+#splitL{display:flex;flex-direction:column;gap:10px}
+.sl{display:flex;align-items:center;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);opacity:0;transform:translateX(-8px);transition:opacity .6s,transform .6s;white-space:nowrap}
 .sl.on{opacity:1;transform:none}
-.sl b{display:block;color:var(--tx);font-weight:700;font-size:17px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.sl b i{font-style:normal;font-weight:500;font-size:12px;color:var(--mut);margin-left:8px;letter-spacing:.08em}
-#slReal b{color:var(--lime)}
-#slNr{position:absolute;right:0;bottom:4px;text-align:right}
-#slNr b{display:inline;margin-right:10px}
-#slNr:after{content:'';position:absolute;right:3px;bottom:-8px;width:1px;height:7px;background:var(--mut)}
+.sl s{flex:none;width:12px;height:12px;border-radius:2px;margin-right:9px;text-decoration:none}
+.sl b{color:var(--tx);font-weight:700;font-size:17px;letter-spacing:.02em;font-variant-numeric:tabular-nums;min-width:4.1em}
+.sl i{font-style:normal;color:var(--tx);opacity:.7;min-width:2.9em;font-size:12px}
+#slReal s{background:#c9c5bd}#slReal b{color:var(--lime)}
+#slRec s{background:rgba(143,163,150,.2);box-shadow:inset 0 0 0 1px rgba(143,163,150,.7)}
+#slNr s{background:repeating-linear-gradient(45deg,rgba(158,168,160,.85) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1px rgba(143,163,150,.5)}
 @media (max-width:1000px){#brand span{display:none}#legend{bottom:auto;top:130px}#phase{font-size:clamp(22px,5vw,40px)}#hint{display:none}}
 #vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(110% 90% at 50% 45%,transparent 45%,rgba(6,9,7,.72) 100%)}
 </style>
@@ -44,7 +45,7 @@ body{font-family:'IBM Plex Mono',ui-monospace,monospace;color:var(--tx)}
 <div id="vig"></div>
 <div class="ui" id="brand">DEFENCE <span>МАПА УКРИТТІВ · ДАНІ ДСНС</span></div>
 <div class="ui" id="phase"><small id="phaseSm">Реєстр</small><span id="phaseTx">На папері</span></div>
-<div class="ui" id="counter"><div id="split"><div id="splitTop"><div class="sl" id="slNr"><b id="slNrN">0</b>не рекомендовані</div></div><div id="bar"><div class="seg" id="segReal"></div><div class="seg" id="segRec"><div class="fill" id="fillRec"></div></div><div class="seg" id="segNr"><div class="fill" id="fillNr"></div></div></div><div id="splitBot"><div class="sl" id="slReal"><b id="slRealN">0</b>реальні укриття</div><div class="sl" id="slRec"><b id="slRecN">0</b>підвали та паркінги</div></div></div><div id="pct" style="display:none"></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
+<div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.12)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="30" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>реальні укриття</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>підвали та паркінги</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>не рекомендовані</div></div></div><div id="pct" style="display:none"></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
 <div class="ui" id="legend"><div><i style="background:rgba(196,237,46,.45);border:1px solid var(--lime)"></i>На папері</div><div><i style="background:#c9c5bd"></i>Реальні укриття</div><div><i style="background:#3a4440"></i>Окуповано</div></div>
 <div class="ui" id="hint">Пробіл — пауза · R — спочатку</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
@@ -194,19 +195,21 @@ const SEEK=(location.search.match(/[?&]t=([\d.]+)/)||[])[1]; if(SEEK){offset=-SE
 function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
 function eio(x){x=x<0?0:x>1?1:x;return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
 const $=id=>document.getElementById(id);
-const split=$('split'),bar=$('bar'),segReal=$('segReal'),segRec=$('segRec'),segNr=$('segNr'),fillRec=$('fillRec'),fillNr=$('fillNr'),slReal=$('slReal'),slRec=$('slRec'),slNr=$('slNr');
-segReal.style.flex=META.real+' 0 0';segRec.style.flex=META.rec+' 0 0';segNr.style.flex=Math.max(META.nr,META.total*0.035)+' 0 0';
-slReal.style.flex=META.real+' 0 0';slRec.style.flex=(META.rec+META.nr)+' 0 0';
+const split=$('split'),aReal=$('aReal'),aRecBg=$('aRecBg'),aNrBg=$('aNrBg'),aRecL=$('aRecL'),aNrL=$('aNrL'),growC=$('growC'),pieC=$('pieC'),slReal=$('slReal'),slRec=$('slRec'),slNr=$('slNr');
 const pc=v=>Math.round(v/META.total*100)+'%';
-function drawSplit(fill,gA,gB,done,vis){ // one full bar = whole registry; it splits into its real parts
+const U=1000, uReal=META.real/META.total*U, uNr=Math.max(META.nr/META.total*U,30), uRec=U-uReal-uNr;   // arc lengths (smallest slice kept readable)
+function arc(el,start,len){len=Math.max(0,len);el.setAttribute('stroke-dasharray',len+' '+(U-len));el.setAttribute('stroke-dashoffset',-start);}
+$('slRealP').textContent=pc(META.real);$('slRecP').textContent=pc(META.rec);$('slNrP').textContent=pc(META.nr);pieC.textContent=pc(META.real);
+function drawSplit(fill,gA,gB,done,vis){ // one full circle = whole registry; it simply divides into its parts
   split.classList.toggle('on',vis&&fill>0.02);
-  bar.style.transform='scaleX('+Math.max(0.001,fill)+')';
-  const gapA=Math.min(1,gA*5)*6, gapB=Math.min(1,gB*5)*6;
-  segRec.style.marginLeft=gapA+'px'; slRec.style.marginLeft=gapA+'px'; segNr.style.marginLeft=gapB+'px';
-  fillRec.style.width=(1-gA)*100+'%'; fillNr.style.width=(1-gB)*100+'%';   // lime drains west->east, like the map
-  segReal.classList.toggle('done',done);
+  growC.setAttribute('stroke-dasharray',(fill*U)+' '+U);
+  const g=Math.min(1,gA*5)*7, g2=Math.min(1,gB*5)*7;        // gaps open as the parts separate
+  arc(aReal,g/2,uReal-g);
+  arc(aRecBg,uReal+g/2,uRec-g/2-g2/2); arc(aRecL,uReal+g/2+(uRec-g)*gA,(uRec-g/2-g2/2)*(1-gA));
+  arc(aNrBg,uReal+uRec+g2/2,uNr-g2/2-g/2); arc(aNrL,uReal+uRec+g2/2+(uNr-g2)*gB,(uNr-g2/2-g/2)*(1-gB));
+  aReal.classList.toggle('done',done); pieC.classList.toggle('on',vis&&done);
   slRec.classList.toggle('on',vis&&gA>0.02); slNr.classList.toggle('on',vis&&gB>0.02); slReal.classList.toggle('on',vis&&done);
-  $('slRecN').innerHTML=fmt(META.rec*gA)+'<i>'+pc(META.rec)+'</i>'; $('slNrN').innerHTML=fmt(META.nr*gB)+'<i>'+pc(META.nr)+'</i>'; $('slRealN').innerHTML=fmt(META.real)+'<i>'+pc(META.real)+'</i>';
+  $('slRecN').textContent=fmt(META.rec*gA); $('slNrN').textContent=fmt(META.nr*gB); $('slRealN').textContent=fmt(META.real);
 }
 const numEl=document.getElementById('num'),lbl=document.getElementById('lbl'),pct=document.getElementById('pct'),phTx=document.getElementById('phaseTx'),phSm=document.getElementById('phaseSm'),ph=document.getElementById('phase');
 function fmt(n){return Math.round(n).toLocaleString('uk-UA').replace(/,/g,' ')}
