@@ -19,7 +19,18 @@ body{font-family:'IBM Plex Mono',ui-monospace,monospace;color:var(--tx)}
 #legend i{display:inline-block;width:12px;height:12px;margin-right:9px;vertical-align:-1px;border-radius:2px}
 #hint{left:50%;bottom:16px;transform:translateX(-50%);font-size:11px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
 #lbl{max-width:52vw}
-#ledger{margin-bottom:14px;display:flex;flex-direction:column;gap:7px}
+#waffleCap{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-bottom:9px;opacity:0;transition:opacity .8s}
+#waffleCap.on{opacity:1}
+#waffle{display:grid;grid-template-rows:repeat(5,14px);grid-auto-flow:column;grid-auto-columns:14px;gap:3px;margin-bottom:12px}
+.cell{width:14px;height:14px;border-radius:2px;background:var(--lime);opacity:0;transform:scale(.3);transition:opacity .3s,transform .3s,background-color .5s,box-shadow .5s}
+.cell.on{opacity:1;transform:none}
+.cell.rec{background:transparent;box-shadow:inset 0 0 0 1px rgba(143,163,150,.6)}
+.cell.nr{background:repeating-linear-gradient(45deg,rgba(158,168,160,.75) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1px rgba(143,163,150,.5)}
+.cell.real{background:#c9c5bd}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:10px;vertical-align:-1px}
+.sw.rec{box-shadow:inset 0 0 0 1px rgba(143,163,150,.8)}
+.sw.nr{background:repeating-linear-gradient(45deg,rgba(158,168,160,.85) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1px rgba(143,163,150,.5)}
+#ledger{margin-bottom:12px;display:flex;flex-direction:column;gap:7px}
 .lg{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);opacity:0;transform:translateX(-14px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1);white-space:nowrap}
 .lg.on{opacity:1;transform:none}.lg b{display:inline-block;min-width:6.2em;color:var(--tx);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em;font-size:17px}
 .lg.done{opacity:.55}
@@ -30,7 +41,7 @@ body{font-family:'IBM Plex Mono',ui-monospace,monospace;color:var(--tx)}
 <div id="vig"></div>
 <div class="ui" id="brand">DEFENCE <span>МАПА УКРИТТІВ · ДАНІ ДСНС</span></div>
 <div class="ui" id="phase"><small id="phaseSm">Реєстр</small><span id="phaseTx">На папері</span></div>
-<div class="ui" id="counter"><div id="ledger"><div class="lg" id="lgA"><b id="lgAn">− 0</b>підвали та паркінги</div><div class="lg" id="lgB"><b id="lgBn">− 0</b>не рекомендовані до укриття</div></div><div id="pct" style="position:static;margin-bottom:8px"></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
+<div class="ui" id="counter"><div id="waffleCap">з кожних 100 споруд</div><div id="waffle"></div><div id="ledger"><div class="lg" id="lgA"><i class="sw rec"></i><b id="lgAn">− 0</b>підвали та паркінги</div><div class="lg" id="lgB"><i class="sw nr"></i><b id="lgBn">− 0</b>не рекомендовані до укриття</div></div><div id="pct" style="display:none"></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
 <div class="ui" id="legend"><div><i style="background:rgba(196,237,46,.45);border:1px solid var(--lime)"></i>На папері</div><div><i style="background:#c9c5bd"></i>Реальні укриття</div><div><i style="background:#3a4440"></i>Окуповано</div></div>
 <div class="ui" id="hint">Пробіл — пауза · R — спочатку</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
@@ -140,7 +151,7 @@ if(SHOW_LABELS) MAPDATA.forEach(o=>{
   const cam=new THREE.PerspectiveCamera(36,16/9,0.1,800);
   const eioL=t=>{t=Math.max(0,Math.min(1,t));return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
   const setCam=s=>{const ang=-0.35+s*0.05, rad=118-12*eioL((s-6)/4), elev=71-8*eioL((s-6)/4);
-    cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(0,2,-2); cam.updateMatrixWorld(); cam.updateProjectionMatrix();};
+    cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(-6,2,11); cam.updateMatrixWorld(); cam.updateProjectionMatrix();};
   const W=1920,H=1080, PAD=12, MAXD=13; // MAXD in map units
   const poses=[]; for(let s=0;s<=16.5;s+=0.75)poses.push(s);
   const toScr=(x,y,z)=>{const v=new THREE.Vector3(x,y,z).project(cam);return [(v.x+1)/2*W,(1-v.y)/2*H];};
@@ -180,13 +191,24 @@ const SEEK=(location.search.match(/[?&]t=([\d.]+)/)||[])[1]; if(SEEK){offset=-SE
 function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
 function eio(x){x=x<0?0:x>1?1:x;return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
 const lgA=document.getElementById('lgA'),lgB=document.getElementById('lgB'),lgAn=document.getElementById('lgAn'),lgBn=document.getElementById('lgBn');
+const waffle=document.getElementById('waffle'),waffleCap=document.getElementById('waffleCap');
+const N_REAL=Math.round(META.real/META.total*100), N_NR=Math.max(1,Math.round(META.nr/META.total*100)), N_REC=100-N_REAL-N_NR;
+const cells=[];for(let i=0;i<100;i++){const c=document.createElement('div');c.className='cell';waffle.appendChild(c);cells.push(c);}
+function drawWaffle(fill,gA,gB,done){ // fill 0..1 of registry count-up; gA/gB progress of each sift step
+  const on=Math.round(fill*100), a=Math.round(gA*N_REC), b=Math.round(gB*N_NR);
+  for(let i=0;i<100;i++){let cls='cell'; if(i<on)cls+=' on';
+    if(i>=N_REAL&&i<N_REAL+N_REC){if(i-N_REAL<a)cls+=' rec';}
+    else if(i>=N_REAL+N_REC){if(i-N_REAL-N_REC<b)cls+=' nr';}
+    else if(done)cls+=' real';
+    if(cells[i].className!==cls)cells[i].className=cls;}
+}
 const numEl=document.getElementById('num'),lbl=document.getElementById('lbl'),pct=document.getElementById('pct'),phTx=document.getElementById('phaseTx'),phSm=document.getElementById('phaseSm'),ph=document.getElementById('phase');
 function fmt(n){return Math.round(n).toLocaleString('uk-UA').replace(/,/g,' ')}
 let lastPhase=-1;
 function setPhase(p){if(p===lastPhase)return;lastPhase=p;
   if(p===0){phSm.textContent='Реєстр ДСНС';phTx.textContent='На папері';lbl.textContent='споруд у реєстрі';pct.style.opacity=0;}
   else if(p===1){phSm.textContent='Реєстр ДСНС';phTx.textContent='Що всередині';lbl.textContent='споруд у реєстрі';pct.style.opacity=0;}
-  else{phSm.textContent='Насправді';phTx.textContent='Реальні укриття';lbl.textContent='реальних укриттів · капітальних, не підвали';pct.textContent=META.pct+'% реєстру';pct.style.opacity=1;}
+  else{phSm.textContent='Насправді';phTx.textContent='Реальні укриття';lbl.textContent='реальних укриттів · '+META.pct+'% реєстру · капітальних, не підвали';pct.textContent=META.pct+'% реєстру';pct.style.opacity=1;}
 }
 function frame(now){
   requestAnimationFrame(frame);
@@ -210,6 +232,8 @@ function frame(now){
   lgA.classList.toggle('done',s>=B0-0.2);
   lgAn.textContent='− '+fmt(remA); lgBn.textContent='− '+fmt(remB);
   const endT=B0+BSP+BW;
+  const vis=s<16; waffleCap.classList.toggle('on',s>0.6&&vis);
+  drawWaffle(vis?ease(s/2.2):0, remA/META.rec, remB/META.nr, s>=endT-0.3);
   setPhase(s<A0-0.2?0:(s<endT?1:2));
   const fade = s>16 ? 1-(s-16) : 1; document.body.style.opacity=Math.max(0,Math.min(1,fade*1.4));
   items.forEach(it=>{
@@ -235,7 +259,7 @@ function frame(now){
   occGroup.userData.mat.opacity=0.95*occA; occGroup.userData.edge.opacity=0.9*occA;
   // camera: slow orbit, dolly in on rebuild
   const ang=-0.35 + s*0.05, rad=118 - 12*eio((s-6)/4), elev=71 - 8*eio((s-6)/4);
-  camera.position.set(Math.sin(ang)*rad, elev, Math.cos(ang)*rad); camera.lookAt(0,2,-2);
+  camera.position.set(Math.sin(ang)*rad, elev, Math.cos(ang)*rad); camera.lookAt(-6,2,11);
   renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);
