@@ -24,6 +24,23 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto!
 #product .pv-slide:nth-child(3){animation-delay:14s}
 @keyframes pvkb{0%{opacity:0;transform:scale(1.0)}4%{opacity:1}29%{opacity:1}34%{opacity:0}100%{opacity:0;transform:scale(1.1)}}
 @media (prefers-reduced-motion:reduce){#product .pv-slide{animation:none}#product .pv-slide:not(:first-child){opacity:0}}
+
+/* ── motion v2 (2026-09-30): calm, evidence-first motion; see knowledge_base/skillry_opus55_motion ──
+   Thread: the yellow measuring line (eyebrow dash, hero/CTA underline) draws on in every block.
+   Everything is visible by default; the .mx class is set only when GSAP loads and motion is allowed. */
+.eyebrow::before{transform:scaleX(var(--dash,1));transform-origin:left center}
+.hero h1 .yel::after{transform:scaleX(var(--u,1));transform-origin:left center}
+#cta h2 .yel{position:relative;white-space:nowrap}
+#cta h2 .yel::after{content:"";position:absolute;left:0;right:.04em;bottom:.04em;height:.07em;background:var(--accent);opacity:.9;transform:scaleX(var(--u,1));transform-origin:left center}
+.card .n,.counter .big,.natsum .natn{font-variant-numeric:tabular-nums}
+.mx .rv.in{animation:none}
+.mx .mx-m{display:block;overflow:hidden;padding:.14em 0 .16em;margin:-.14em 0 -.16em}
+.mx .mx-i{display:block}
+#map{position:relative}
+.mx-irisbox{position:absolute;overflow:hidden;pointer-events:none;z-index:6;display:none}
+.mx-iris{position:absolute;border-radius:50%;background:var(--ground);transform:scale(0);will-change:transform}
+.mx .d.pv{transition:opacity .5s ease}
+.mx .mx-nopv .d.pv{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -4352,45 +4369,215 @@ document.querySelectorAll('.rv').forEach(function(e){io.observe(e)});
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
 <script>
+/* Motion v2 (2026-09-30). Rules taken from the Opus 5.5 motion atlas:
+   one primary move per transition; the next scene grows out of an object already in frame
+   (city marker -> iris); numbers roll to a verdict; the map is revealed and re-coloured as a
+   west-to-east wave; the yellow measuring line draws on as the recurring thread; calm ending.
+   Fail-safe: without GSAP or with reduced motion nothing here runs and the page stays static. */
 (function(){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches || location.search.indexOf('static')>=0) return;
   if(!window.gsap||!window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
-  try{ if(window.Lenis){ var lenis=new Lenis({duration:1.1,smoothWheel:true});
+  document.documentElement.classList.add('mx');
+  var EASE='power3.out', EASE_IO='power2.inOut';
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+
+  /* smooth scroll */
+  var lenis=null;
+  try{ if(window.Lenis){ lenis=new Lenis({duration:1.1,smoothWheel:true});
     lenis.on('scroll',ScrollTrigger.update);
     gsap.ticker.add(function(t){lenis.raf(t*1000);}); gsap.ticker.lagSmoothing(0);
-    document.querySelectorAll('nav a[href^="#"]').forEach(function(a){a.addEventListener('click',function(e){var t=document.querySelector(a.getAttribute('href')); if(t){e.preventDefault(); lenis.scrollTo(t,{offset:-10});}});});
+    $$('nav a[href^="#"], #cta a[href^="#"]').forEach(function(a){a.addEventListener('click',function(e){var t=$(a.getAttribute('href')); if(t){e.preventDefault(); lenis.scrollTo(t,{offset:-10});}});});
   }}catch(e){}
-  // hero load reveal
-  var hero=document.querySelector('.hero');
-  if(hero){ var tl=gsap.timeline({defaults:{ease:'power3.out'}});
-    tl.from('.hero .eyebrow',{y:24,opacity:0,duration:.7})
-      .from('.hero h1',{y:44,opacity:0,duration:1.0},'-=.3')
-      .from('.hero .cue',{y:16,opacity:0,duration:.6},'-=.45');
-    gsap.to('.hero .wrap',{yPercent:16,opacity:.3,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:true}});
+  function scrollToEl(el){ if(lenis){ lenis.scrollTo(el,{offset:-10}); } else { el.scrollIntoView({behavior:'smooth'}); } }
+
+  /* helpers */
+  function num(s){return +String(s).replace(/\D/g,'')||0;}
+  function fmt(n){n=Math.round(n); return n>=1000? n.toLocaleString('uk-UA').replace(/[\s  ,]/g,' ') : String(n);}
+  function roll(el,from,to,dur,delay,pre,suf,finalText){
+    pre=pre||''; suf=suf||''; if(el._rt) el._rt.kill(); var o={v:from};
+    el.textContent=pre+fmt(from)+suf;
+    el._rt=gsap.to(o,{v:to,duration:dur||.9,delay:delay||0,ease:'power2.out',
+      onUpdate:function(){el.textContent=pre+fmt(o.v)+suf;},
+      onComplete:function(){el.textContent=finalText!=null?finalText:pre+fmt(to)+suf;}});
   }
-  // generic reveals
-  gsap.utils.toArray('.rv').forEach(function(el){ if(el.closest('.hero'))return;
-    gsap.from(el,{y:44,opacity:0,duration:.9,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 86%'}});
+  function parseNum(t){ // "72 760" | "24 год" | "500 кПа" | "600+"; skips "24/7", "ДСТУ"
+    var m=String(t).trim().match(/^([^\d]*)(\d[\d\s ]*\d|\d)(.*)$/);
+    if(!m || /^[\/\d.,]/.test(m[3])) return null;
+    return {pre:m[1], val:num(m[2]), suf:m[3]};
+  }
+  function maskLines(h){ var parts=h.innerHTML.split(/<br\s*\/?>/i);
+    h.innerHTML=parts.map(function(p){return '<span class="mx-m"><span class="mx-i">'+p.trim()+'</span></span>';}).join(''); return $$('.mx-i',h); }
+  function maskBlock(el){ el.innerHTML='<span class="mx-m"><span class="mx-i">'+el.innerHTML+'</span></span>'; return $('.mx-i',el); }
+  function dash(tl,eb,at){ if(!eb) return; tl.fromTo(eb,{'--dash':0,opacity:0},{'--dash':1,opacity:1,duration:.6,ease:EASE_IO},at); }
+
+  /* 1. hero: lines rise from their baseline one after another, then the yellow line underlines the verdict */
+  var hero=$('.hero');
+  if(hero){
+    var h1=$('h1',hero), lines=maskLines(h1), yel=$('.yel',h1);
+    var tl=gsap.timeline({defaults:{ease:EASE}});
+    dash(tl,$('.eyebrow',hero),0);
+    tl.from(lines,{yPercent:112,duration:.95,stagger:.13},.15);
+    if(yel) tl.fromTo(yel,{'--u':0},{'--u':1,duration:.75,ease:EASE_IO},'-=.3');
+    tl.from($('.sub',hero),{y:14,opacity:0,duration:.8},'-=.5')
+      .from($('.cue',hero),{opacity:0,duration:.6},'-=.35');
+    gsap.to($('.wrap',hero),{yPercent:8,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:true}});
+  }
+
+  /* 2. section heads: dash draws, heading rises through a mask, copy follows */
+  $$('.shead').forEach(function(sh){
+    var tl=gsap.timeline({scrollTrigger:{trigger:sh,start:'top 86%',once:true},defaults:{ease:EASE}});
+    var eb=$('.eyebrow',sh), h=$('h2',sh), p=$('p',sh);
+    dash(tl,eb,0);
+    if(h) tl.from(maskBlock(h),{yPercent:108,duration:.9},eb?.2:0);
+    if(p) tl.from(p,{y:12,opacity:0,duration:.7},'-=.55');
   });
-  // card stagger
-  gsap.utils.toArray('.cards').forEach(function(c){ var cs=c.querySelectorAll('.card'); if(!cs.length)return;
-    gsap.from(cs,{y:38,opacity:0,duration:.7,stagger:.12,ease:'power3.out',scrollTrigger:{trigger:c,start:'top 84%'}});
+
+  /* 3. quiet blocks: short rise, once */
+  ['.mapmode','#stats > .wrap > p.rv'].forEach(function(s){ $$(s).forEach(function(el){
+    gsap.from(el,{y:14,opacity:0,duration:.7,ease:EASE,scrollTrigger:{trigger:el,start:'top 90%',once:true}});
+  });});
+
+  /* 4. map: regions appear as a west-to-east wave, then occupied layer, labels and city markers */
+  var MV=$('#mapview'), CV=$('#cityview'), MAP=$('#map');
+  var obs=MV? $$('.mapbox svg .ob',MV):[];
+  obs.forEach(function(el){ var b; try{b=el.getBBox();}catch(e){b={x:500,width:0};}
+    el._cx=Math.max(0,Math.min(1,(b.x+b.width/2)/1000));
+    el.style.transitionDelay=(el._cx*.7).toFixed(3)+'s';   /* mode switch re-colours as the same wave */
   });
-  // number count-ups (leaf .n only)
-  gsap.utils.toArray('.card .n').forEach(function(n){ if(n.children.length)return;
-    var raw=n.textContent.replace(/\s/g,''); var num=parseInt(raw,10); if(isNaN(num))return;
-    var suffix=n.textContent.replace(/[\d\s\u00a0]/g,''); var o={v:0};
-    gsap.to(o,{v:num,duration:1.5,ease:'power2.out',scrollTrigger:{trigger:n,start:'top 90%'},
-      onUpdate:function(){ n.textContent=Math.round(o.v).toLocaleString('uk-UA').replace(/,/g,'\u00a0')+(suffix||''); }});
-  });
-  // (auto flip removed — user toggles «Усі/Реальні» manually)
-  // product video moment
-  var pv=document.querySelector('#product');
+  if(MV){
+    var marks=$$('.citymk',MV), dots=marks.map(function(g){return $('circle:not([fill="none"])',g);}).filter(Boolean),
+        klab=marks.map(function(g){return $('text',g);}).filter(Boolean);
+    var mtl=gsap.timeline({scrollTrigger:{trigger:MV,start:'top 80%',once:true},defaults:{ease:EASE}});
+    mtl.from($('.uainfo',MV),{opacity:0,y:8,duration:.5},0)
+       .from(obs,{opacity:0,duration:.55,ease:'power1.out',stagger:function(i,t){return (t._cx||0)*1.0;}},.05)
+       .from($('#occlayer',MV),{opacity:0,duration:.6},1.0)
+       .from($$('.olabel',MV),{opacity:0,duration:.5,stagger:.012},1.05)
+       .from(dots,{scale:0,transformOrigin:'50% 50%',duration:.5,ease:'back.out(1.8)',stagger:.07},1.25)
+       .from(klab,{opacity:0,duration:.4,stagger:.07},1.4)
+       .from($$('.legend, .hintline',$('.mapbox',MV)),{opacity:0,y:8,duration:.5,stagger:.08},1.6);
+  }
+
+  /* national figure rolls to the new verdict when the mode changes */
+  if(typeof window.setMode==='function'){
+    var _setMode=window.setMode;
+    window.setMode=function(m){
+      var nn=$('#natn'), from=nn?num(nn.textContent):0;
+      _setMode(m);
+      if(nn){ var fin=nn.textContent, to=num(fin); if(from!==to) roll(nn,from,to,1.0,0,'','',fin); }
+      var nl=$('#natl'); if(nl) gsap.fromTo(nl,{opacity:0,y:6},{opacity:1,y:0,duration:.55,ease:EASE,delay:.15});
+    };
+  }
+
+  /* oblast chart: bars draw on when it enters, then cascade on every mode switch */
+  var bars=$$('#obchart .cbar');
+  bars.forEach(function(b,i){ b.style.transitionDelay=(i*.022).toFixed(3)+'s'; b.style.width='0%'; });
+  if(bars.length) ScrollTrigger.create({trigger:'#obchart',start:'top 88%',once:true,onEnter:function(){ if(window.chartRender) chartRender(window.MODE||'all'); }});
+
+  /* 5. city drill-down: the clicked marker opens as an iris; back closes the iris into the same marker */
+  var box=document.createElement('div'), iris=document.createElement('div');
+  box.className='mx-irisbox'; iris.className='mx-iris'; box.appendChild(iris); if(MAP) MAP.appendChild(box);
+  var busy=false, lastCity=null, cityTl=null;
+  function rel(el){ var a=el.getBoundingClientRect(), s=MAP.getBoundingClientRect(); return {x:a.left-s.left,y:a.top-s.top,w:a.width,h:a.height}; }
+  function markerDot(k){ return $('.citymk[data-city="'+k+'"] circle:not([fill="none"])',MV); }
+  function far(cx,cy,B){ return Math.hypot(Math.max(cx,B.w-cx),Math.max(cy,B.h-cy))+12; }
+  function place(B,cx,cy,R){
+    box.style.display='block'; box.style.left=B.x+'px'; box.style.top=B.y+'px'; box.style.width=B.w+'px'; box.style.height=B.h+'px';
+    iris.style.width=iris.style.height=(2*R)+'px'; iris.style.left=(cx-R)+'px'; iris.style.top=(cy-R)+'px';
+  }
+  function cityIn(k){
+    var cc=$('#city-'+k); if(!cc) return; if(cityTl) cityTl.kill();
+    var svg=$('.dcloud svg',cc), on=$('.seg button.on',cc), lvl=on?on.dataset.lvl:'all', big=$('#cnum-'+k);
+    cityTl=gsap.timeline({defaults:{ease:EASE}});
+    cityTl.fromTo($$('.back, .cvhead, .cvsub, .seg',CV).filter(function(e){return e.closest('.cityc')===cc||e.id==='back';}),{opacity:0,y:12},{opacity:1,y:0,duration:.6,stagger:.07},.05)
+      .fromTo($('.dcloud',cc),{opacity:0},{opacity:1,duration:.4},.2);
+    if(svg) cityTl.fromTo(svg,{clipPath:'circle(0% at 50% 50%)'},{clipPath:'circle(72% at 50% 50%)',duration:1.15,ease:'power2.out',clearProps:'clipPath'},.25);
+    cityTl.fromTo($$('.dcloud .legend, .cta-in',cc),{opacity:0,y:10},{opacity:1,y:0,duration:.5,stagger:.08},.9);
+    if(big && window.CN && CN[k]) roll(big,0,CN[k][lvl],1.15,.25);
+  }
+  if(typeof window.openCity==='function' && MAP && MV && CV){
+    var _openCity=window.openCity;
+    window.openCity=function(k){
+      if(busy) return; var dot=markerDot(k);
+      if(!dot || MV.classList.contains('hidden')){ _openCity(k); cityIn(k); lastCity=k; return; }
+      busy=true; lastCity=k;
+      var d=dot.getBoundingClientRect(), s=MAP.getBoundingClientRect(), px=d.left+d.width/2-s.left, py=d.top+d.height/2-s.top;
+      var B=rel(MV), cx=px-B.x, cy=py-B.y;
+      place(B,cx,cy,far(cx,cy,B)); gsap.set(iris,{opacity:1});
+      gsap.fromTo(iris,{scale:0},{scale:1,duration:.62,ease:'power3.in',onComplete:function(){
+        _openCity(k);
+        var B2=rel(CV), cx2=px-B2.x, cy2=py-B2.y; place(B2,cx2,cy2,far(cx2,cy2,B2)); gsap.set(iris,{scale:1});
+        cityIn(k);
+        gsap.to(iris,{opacity:0,duration:.5,ease:'power1.out',delay:.05,onComplete:function(){box.style.display='none';busy=false;}});
+      }});
+    };
+    CV.addEventListener('click',function(e){
+      if(!e.target.closest('#back')) return;
+      e.stopPropagation(); e.preventDefault(); if(busy) return; busy=true;
+      var B=rel(CV); place(B,B.w/2,B.h/2,far(B.w/2,B.h/2,B)); gsap.set(iris,{scale:1});
+      gsap.fromTo(iris,{opacity:0},{opacity:1,duration:.3,ease:'power1.in',onComplete:function(){
+        CV.classList.add('hidden'); MV.classList.remove('hidden');
+        var dot=markerDot(lastCity), B2=rel(MV), cx=B2.w/2, cy=B2.h/2;
+        if(dot){ var d=dot.getBoundingClientRect(), s=MAP.getBoundingClientRect(); cx=d.left+d.width/2-s.left-B2.x; cy=d.top+d.height/2-s.top-B2.y; }
+        place(B2,cx,cy,far(cx,cy,B2)); gsap.set(iris,{scale:1,opacity:1});
+        scrollToEl(MAP); ScrollTrigger.refresh();
+        gsap.to(iris,{scale:0,duration:.75,ease:'power3.inOut',onComplete:function(){box.style.display='none';busy=false;}});
+      }});
+    },true);
+  }
+
+  /* city filter: basements fade out instead of blinking; the counter rolls to the verdict */
+  if(typeof window.setLvl==='function' && window.CN){
+    window.setLvl=function(city,lvl){
+      $$('.seg button[data-city="'+city+'"]').forEach(function(b){b.classList.toggle('on',b.dataset.lvl===lvl);});
+      var g=$('#pts-'+city); if(g){ $$('.d.hide',g).forEach(function(d){d.classList.remove('hide');}); g.classList.toggle('mx-nopv',lvl==='nopv'); }
+      var big=$('#cnum-'+city); if(big) roll(big,num(big.textContent),CN[city][lvl],.9);
+      var lab=$('#clab-'+city); if(lab && window.LAB) lab.textContent=LAB[lvl];
+    };
+  }
+
+  /* 6. stats: cards count up in order, then the registry bar is split part by part (verdict: 16% last) */
+  function countCards(wrap,stag){
+    var cards=$$('.card',wrap); if(!cards.length) return;
+    var tl=gsap.timeline({scrollTrigger:{trigger:wrap,start:'top 84%',once:true}});
+    tl.from(cards,{y:16,opacity:0,duration:.6,stagger:stag,ease:EASE});
+    cards.forEach(function(c,i){ var n=$('.n',c); if(!n||n.children.length) return; var orig=n.textContent, p=parseNum(orig); if(!p) return;
+      n.textContent=p.pre+'0'+p.suf;
+      tl.add(function(){ roll(n,0,p.val,1.3,0,p.pre,p.suf,orig); }, i*stag+.1);
+    });
+  }
+  $$('#stats .cards').forEach(function(w){countCards(w,.16);});
+  $$('#solution .cards').forEach(function(w){countCards(w,.08);});
+  var rb=$('#readybar'), rl=$('#readylg');
+  if(rb && rb.children.length){
+    var segs=[].slice.call(rb.children), lg=rl?[].slice.call(rl.children):[];
+    var rtl=gsap.timeline({scrollTrigger:{trigger:rb,start:'top 88%',once:true}});
+    segs.forEach(function(sg,i){ rtl.from(sg,{width:0,duration:.75,ease:EASE_IO},i*.6); if(lg[i]) rtl.from(lg[i],{opacity:0,y:6,duration:.45,ease:EASE},i*.6+.3); });
+  }
+  var ob=$('#obars');
+  if(ob){ var inner=$$('#obars > div > span:nth-child(2) > span');
+    gsap.from(inner,{width:0,duration:.8,ease:'power2.out',stagger:.025,scrollTrigger:{trigger:ob,start:'top 86%',once:true}}); }
+
+  /* 7. product: copy rises line by line over the slow push-out of the photos */
+  var pv=$('#product');
   if(pv){
-    gsap.from('#product .pv-copy > *',{y:44,opacity:0,duration:.9,stagger:.13,ease:'power3.out',scrollTrigger:{trigger:pv,start:'top 68%'}});
-    gsap.fromTo('#product video',{scale:1.14},{scale:1,ease:'none',scrollTrigger:{trigger:pv,start:'top bottom',end:'bottom top',scrub:true}});
+    var ptl=gsap.timeline({scrollTrigger:{trigger:pv,start:'top 62%',once:true},defaults:{ease:EASE}});
+    dash(ptl,$('.pv-copy .eyebrow',pv),0);
+    var ph=$('.pv-copy h2',pv); if(ph) ptl.from(maskLines(ph),{yPercent:112,duration:.95,stagger:.13},.2);
+    ptl.from($('.pv-copy p',pv),{y:12,opacity:0,duration:.7},'-=.5');
+    var sl=$('.pv-slides',pv); if(sl) gsap.fromTo(sl,{scale:1.12},{scale:1,ease:'none',scrollTrigger:{trigger:pv,start:'top bottom',end:'bottom top',scrub:true}});
   }
+
+  /* 8. closing: heading rises, the yellow line underlines "більше", buttons settle. Nothing moves after that. */
+  var cta=$('#cta .wrap');
+  if(cta){
+    var ctl=gsap.timeline({scrollTrigger:{trigger:cta,start:'top 80%',once:true},defaults:{ease:EASE}});
+    var ch=$('h2',cta), cy=ch?$('.yel',ch):null;
+    if(ch) ctl.from(maskBlock(ch),{yPercent:108,duration:.9},0);
+    if(cy) ctl.fromTo($('.yel',cta),{'--u':0},{'--u':1,duration:.7,ease:EASE_IO},.6);
+    ctl.from($('p',cta),{y:12,opacity:0,duration:.7},.55).from($$('.btn',cta),{y:10,opacity:0,duration:.6,stagger:.08},.8);
+  }
+
   ScrollTrigger.refresh();
 })();
 </script>
