@@ -40,7 +40,7 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 #aRecBg{stroke:rgba(143,163,150,.16)}#aNrBg{stroke:url(#hatchP)}
 #aRecL,#aNrL{stroke:var(--yellow)}
 #pieC{position:absolute;left:0;top:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;color:var(--tx);opacity:0}
-#splitL{display:none}
+#splitL{display:flex;flex-direction:column;gap:12px}
 .sl{display:flex;align-items:baseline;font-size:15px;color:var(--concrete2);opacity:0;white-space:nowrap}
 .sl s{flex:none;width:14px;height:14px;border-radius:2px;margin-right:12px;text-decoration:none;align-self:center}
 .sl b{color:var(--tx);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
@@ -58,8 +58,8 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 <div id="vig"></div>
 <div id="grain"></div>
 <div class="ui" id="brand"><div><div class="n">DEFENCE</div><div class="t">Мапа укриттів · дані ДСНС</div></div></div>
-<div class="ui" id="phase"><div class="ttl" id="t0"><small>Україна · стан на 07.10.2026</small><b>Укриття в&nbsp;реєстрі ДСНС</b></div><div class="ttl" id="t1"><small>Насправді</small><b>Захисні споруди</b></div></div>
-<div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.10)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="32" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>захисні споруди</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>найпростіші · підвали</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>дані закриті</div></div></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
+<div class="ui" id="phase"><div class="ttl" id="t0"><small>Україна · стан на 07.10.2026</small><b>Укриття в&nbsp;реєстрі ДСНС</b></div><div class="ttl" id="t1"><small>Насправді</small><b>Укриття, які є безпечними</b></div></div>
+<div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.10)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="32" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>безпечні укриття</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>найпростіші · підвали</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>дані закриті</div></div></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
 <div class="ui" id="hint">Пробіл — пауза · R — спочатку</div>
 <div class="ui" id="src">Джерело: реєстр захисних споруд ДСНС, <b>shelters.dsns.gov.ua</b> · стан на 07.10.2026 · «дані закриті» — тип споруди реєстр не оприлюднює</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
@@ -272,13 +272,13 @@ function frame(now){
   if(paused)return;
   const tm=REC?((window.__recT||0)%DUR):(now-t0-offset)%DUR; const s=ONCE?Math.min(tm/1000,DURS):Math.min(tm/1000,DURS);
   grainEl.style.backgroundImage=GRAIN[Math.floor(s*30)%GRAIN.length];
-  const rise=oexp(s/T_RISE);
+  const rise=1;
   let remA=0,remB=0;
   MAPDATA.forEach(o=>{const u=o.u;o.pA=eio((s-A0-u*ASP)/AW);o.pB=eio((s-B0-u*BSP)/BW);remA+=o.rec*o.pA;remB+=o.nr*o.pB;
     const gone=(o.rec*o.pA+o.nr*o.pB)/Math.max(1,o.rec+o.nr);o.alive=(o.rec+o.nr)?1-gone:0;});
   items.forEach(it=>{it.pA=it.oblast.pA;it.pB=it.oblast.pB;it.alive=it.oblast.alive;});
   const G=(remA+remB)/(META.rec+META.nr), paperAlive=1-G;
-  const up=oexp(s/T_COUNT);
+  const up=1;
   const cnt=s<A0?META.total*up:META.total-remA-remB;
   numEl.textContent=fmt(cnt);
   // donut: ring closes with the counter, then divides
@@ -296,10 +296,10 @@ function frame(now){
   // the answer lands: snap + small punch (energy peak at ~70% of the spot)
   const punch=done?1+0.05*(1-oexp((s-T_REV)/0.6)):1;
   numEl.style.transform='scale('+punch.toFixed(4)+')';
-  lbl.innerHTML=done?'захисних споруд — лише <em>'+META.pct+'%</em> з '+fmt(META.total)+' у реєстрі':(s<A0?'споруд у реєстрі ДСНС':'мінус підвали й закриті дані');
+  lbl.innerHTML=done?'безпечних укриттів — лише <em>'+META.pct+'%</em> з '+fmt(META.total)+' у реєстрі':(s<A0?'споруд у реєстрі ДСНС':'мінус підвали й закриті дані');
   // titles: two only — readable in 6 s
-  const a0=oexp((s-0.05)/0.4)*(1-oexp((s-T_REV+0.1)/0.25)), a1=oexp((s-T_REV)/0.4);
-  t0El.style.opacity=a0;t0El.style.transform='translateY('+(-26*(s>T_REV-0.12?oexp((s-T_REV+0.12)/0.25):0)+18*(1-oexp((s-0.1)/0.45)))+'px)';
+  const a0=1-oexp((s-T_REV+0.1)/0.25), a1=oexp((s-T_REV)/0.4);
+  t0El.style.opacity=a0;t0El.style.transform='translateY('+(-26*(s>T_REV-0.12?oexp((s-T_REV+0.12)/0.25):0))+'px)';
   t1El.style.opacity=a1;t1El.style.transform='translateY('+(22*(1-a1))+'px)';
   items.forEach(it=>{
     const hr=it.hs*rise;it.real.scale.y=Math.max(0.001,hr);it.ed.scale.y=Math.max(0.001,hr);it.rib.scale.y=Math.max(0.001,hr);it.rib.position.y=0.006;
@@ -308,7 +308,7 @@ function frame(now){
       it.ped.scale.y=Math.max(0.001,hp);it.prib.scale.y=Math.max(0.001,hp);it.ped.position.y=hr+(1-it.alive)*0.45;
       matPaper.opacity=.46*Math.pow(paperAlive,2.2);edgeMat.opacity=.6*Math.pow(paperAlive,1.6);ribPaper.opacity=Math.min(.9,edgeMat.opacity*1.3);it.prib.position.y=it.paper.position.y+0.004;it.prib.visible=it.alive>0.02;}
   });
-  const lblFade=ease((s-0.2)/0.4);
+  const lblFade=1;
   labels.forEach(L=>{const o=L.o,it=L.it;
     const val=labelVal(o,s);
     // the arrow stays once the number has moved: ▲ after the count-up, ▼ from the moment this oblast is sifted to the end (net change vs the registry)
