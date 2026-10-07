@@ -27,24 +27,24 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 .ttl small{display:block;font-weight:500;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px}
 .ttl b{display:block;font-weight:800;font-size:46px;line-height:1.02;letter-spacing:.005em;text-transform:uppercase;color:var(--tx)}
 /* counter, bottom-left */
-#counter{left:44px;bottom:58px;line-height:1}
+#counter{left:44px;top:118px;bottom:56px;line-height:1;display:flex;flex-direction:column;justify-content:space-between}
 #num{font-weight:800;font-size:112px;letter-spacing:-.02em;color:var(--yellow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;text-shadow:0 0 44px rgba(196,237,46,.22);transform-origin:left bottom;white-space:nowrap}
 #lbl{font-weight:500;font-size:23px;letter-spacing:.01em;color:var(--concrete2);margin-top:10px;white-space:nowrap}
 #lbl em{font-style:normal;font-weight:800;color:var(--yellow)}
 /* donut + legend */
-#split{display:flex;align-items:center;gap:22px;margin-bottom:22px;opacity:0}
+#split{display:flex;flex-direction:column;align-items:flex-start;gap:20px;opacity:0}
 #pieWrap{position:relative;flex:none}
-#pie{width:140px;height:140px;flex:none;transform:rotate(-90deg);display:block}
+#pie{width:190px;height:190px;flex:none;transform:rotate(-90deg);display:block}
 #pie circle{fill:none;stroke-width:28}
 #aReal{stroke:var(--yellow)}
 #aRecBg{stroke:rgba(143,163,150,.16)}#aNrBg{stroke:url(#hatchP)}
 #aRecL,#aNrL{stroke:var(--yellow)}
-#pieC{position:absolute;left:0;top:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;color:var(--tx);opacity:0}
+#pieC{position:absolute;left:0;top:0;width:190px;height:190px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:40px;color:var(--tx);opacity:0}
 #splitL{display:flex;flex-direction:column;gap:12px}
-.sl{display:flex;align-items:baseline;font-size:15px;color:var(--concrete2);opacity:0;white-space:nowrap}
+.sl{display:flex;align-items:baseline;font-size:17px;color:var(--concrete2);opacity:0;white-space:nowrap}
 .sl s{flex:none;width:14px;height:14px;border-radius:2px;margin-right:12px;text-decoration:none;align-self:center}
-.sl b{color:var(--tx);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
-.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.6em;font-size:15px}
+.sl b{color:var(--tx);font-weight:800;font-size:24px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
+.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.6em;font-size:17px}
 #slReal b,#slReal i{color:var(--yellow)}#slReal s{background:var(--yellow)}
 #slRec s{background:rgba(143,163,150,.16);box-shadow:inset 0 0 0 1.5px var(--steel)}
 #slNr s{background:repeating-linear-gradient(45deg,rgba(158,168,160,.85) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1.5px var(--steel)}
@@ -59,7 +59,7 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 <div id="grain"></div>
 <div class="ui" id="brand"><div class="n">Мапа укриттів</div></div>
 <div class="ui" id="phase"><div class="ttl" id="t0"><b>Укриття в&nbsp;реєстрі ДСНС</b></div><div class="ttl" id="t1"><b>Укриття, які є безпечними</b></div></div>
-<div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.10)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="32" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>безпечні укриття</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>найпростіші · підвали</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>дані закриті</div></div></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
+<div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.10)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="32" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>безпечні укриття</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>найпростіші · підвали</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>дані закриті</div></div></div><div id="bot"><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div></div>
 <div class="ui" id="hint">Пробіл — пауза · R — спочатку</div>
 <div class="ui" id="src">Джерело: реєстр захисних споруд ДСНС, <b>shelters.dsns.gov.ua</b> · стан на 07.10.2026 · «дані закриті» — тип споруди реєстр не оприлюднює</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
@@ -110,6 +110,7 @@ function concreteTex(){
   for(let k=0;k<700;k++){const x=Math.random()*N,y=Math.random()*N;g.fillStyle='rgba(255,255,255,'+(.05+Math.random()*.12)+')';g.beginPath();g.arc(x,y,.8+Math.random()*1.6,0,7);g.fill();}
   const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1/112,1/112);t.offset.set(.5,.5);t.anisotropy=MAXA;return t;}
 const texC=concreteTex();const texCcol=texC.clone();texCcol.colorSpace=THREE.SRGBColorSpace;texCcol.needsUpdate=true;
+const C_CON=new THREE.Color(0xd6d2ca), C_RED=new THREE.Color(0xb8281e);
 const matReal=new THREE.MeshStandardMaterial({color:0xd6d2ca,map:texCcol,bumpMap:texC,bumpScale:.32,roughnessMap:texC,roughness:.95,metalness:.03});
 const matOcc=new THREE.MeshStandardMaterial({color:0x3a4440,roughness:.9,metalness:0});
 const matPaper=new THREE.MeshPhysicalMaterial({color:YEL,emissive:0x5d7a10,emissiveIntensity:.22,roughness:.35,metalness:0,transparent:true,opacity:.46,depthWrite:false});
@@ -136,7 +137,7 @@ MAPDATA.forEach(o=>{
   const hs=1.5, hp=o.occ?0:0.55;
   o.rings.forEach(ring=>{
     const geo=new THREE.ExtrudeGeometry(shapeFrom(ring),{depth:1,bevelEnabled:false});geo.rotateX(-Math.PI/2);
-    const real=new THREE.Mesh(geo,o.occ?matOcc:matReal);real.scale.y=0.001;real.castShadow=true;real.receiveShadow=true;group.add(real);
+    if(!o.occ&&!o.mat)o.mat=matReal.clone(); const real=new THREE.Mesh(geo,o.occ?matOcc:o.mat);real.scale.y=0.001;real.castShadow=true;real.receiveShadow=true;group.add(real);
     const rg=ribbon(ring,o.occ?0.08:0.10);const rib=new THREE.Mesh(rg,o.occ?ribOcc:ribReal);rib.material.side=THREE.DoubleSide;rib.scale.y=0.001;group.add(rib);let prib=null;
     const ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,20),o.occ?edgeMatDim:edgeReal);ed.scale.y=0.001;group.add(ed);
     let paper=null,ped=null;
@@ -317,6 +318,9 @@ function frame(now){
     L.draw(val,it&&it.pB>0.97&&o.s===0,dir);
     const top=it?(it.hs*rise+(it.hp||0)*rise*Math.max(0.001,it.alive)):0.3;
     L.sp.position.set(L.cx,top+(o.occ?0.9:1.6),-L.cy);L.mat.opacity=(o.occ?0.8:1)*lblFade;});
+  // the map turns redder where shelters disappear: tint = share of the registry that was sifted out
+  MAPDATA.forEach(o=>{if(o.occ||!o.mat)return;const loss=o.n?Math.max(0,(o.n-labelVal(o,s))/o.n):0;
+    o.mat.color.lerpColors(C_CON,C_RED,Math.min(1,Math.pow(loss,1.25)));});
   const occA=ease((s-A0)/0.9);
   occGroup.position.y=1.5*rise+0.06;occGroup.userData.mat.opacity=0.95*occA;occGroup.userData.edge.opacity=0.9*occA;
   camAt(s,camera);
