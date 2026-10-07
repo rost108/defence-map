@@ -17,7 +17,7 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 .ui{position:fixed;z-index:5;pointer-events:none}
 .caps{text-transform:uppercase;font-weight:800}
 /* brand lockup — canonical: mark + HOBBIT HOUSE (name) + DEFENCE (small label) */
-#brand{top:30px;left:44px;display:flex;align-items:center;gap:14px}
+#brand{top:36px;left:44px;display:flex;align-items:center;gap:14px}
 #logo{width:52px;height:auto;display:block}
 #brand .n{font-weight:800;font-size:30px;letter-spacing:.06em;color:var(--yellow);text-transform:uppercase;line-height:1}
 #brand .t{font-weight:500;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--concrete2);margin-top:8px}
@@ -57,8 +57,8 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 <canvas id="c"></canvas>
 <div id="vig"></div>
 <div id="grain"></div>
-<div class="ui" id="brand"><div><div class="n">DEFENCE</div><div class="t">Мапа укриттів · дані ДСНС</div></div></div>
-<div class="ui" id="phase"><div class="ttl" id="t0"><small>Україна · стан на 07.10.2026</small><b>Укриття в&nbsp;реєстрі ДСНС</b></div><div class="ttl" id="t1"><small>Насправді</small><b>Укриття, які є безпечними</b></div></div>
+<div class="ui" id="brand"><div class="n">Мапа укриттів</div></div>
+<div class="ui" id="phase"><div class="ttl" id="t0"><b>Укриття в&nbsp;реєстрі ДСНС</b></div><div class="ttl" id="t1"><b>Укриття, які є безпечними</b></div></div>
 <div class="ui" id="counter"><div id="split"><div id="pieWrap"><svg id="pie" viewBox="0 0 160 160"><defs><pattern id="hatchP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(143,163,150,.10)"/><rect width="2" height="5" fill="rgba(158,168,160,.85)"/></pattern><mask id="growM"><circle id="growC" cx="80" cy="80" r="62" pathLength="1000" stroke="#fff" stroke-width="32" fill="none" stroke-dasharray="0 1000"/></mask></defs><g mask="url(#growM)"><circle id="aRecBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrBg" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aReal" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aRecL" cx="80" cy="80" r="62" pathLength="1000"/><circle id="aNrL" cx="80" cy="80" r="62" pathLength="1000"/></g></svg><div id="pieC"></div></div><div id="splitL"><div class="sl" id="slReal"><s></s><b id="slRealN">0</b><i id="slRealP"></i>безпечні укриття</div><div class="sl" id="slRec"><s></s><b id="slRecN">0</b><i id="slRecP"></i>найпростіші · підвали</div><div class="sl" id="slNr"><s></s><b id="slNrN">0</b><i id="slNrP"></i>дані закриті</div></div></div><div id="num">0</div><div id="lbl">споруд у реєстрі ДСНС</div></div>
 <div class="ui" id="hint">Пробіл — пауза · R — спочатку</div>
 <div class="ui" id="src">Джерело: реєстр захисних споруд ДСНС, <b>shelters.dsns.gov.ua</b> · стан на 07.10.2026 · «дані закриті» — тип споруди реєстр не оприлюднює</div>
