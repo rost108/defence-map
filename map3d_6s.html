@@ -3,8 +3,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;800&display=swap">
 <style>
 /* TT Travels Next (Trial): Md = 500 for text, XBd = 800 for CAPS headings. Files go to ./fonts/ */
-@font-face{font-family:'TT Travels Next Trl';src:url(fonts/ttn-md.woff2) format('woff2'),url(fonts/ttn-md.otf) format('opentype');font-weight:500;font-style:normal;font-display:block}
-@font-face{font-family:'TT Travels Next Trl';src:url(fonts/ttn-xbd.woff2) format('woff2'),url(fonts/ttn-xbd.otf) format('opentype');font-weight:800;font-style:normal;font-display:block}
+@font-face{font-family:'TT Travels Next Trl';src:url(fonts/ttn-md.ttf) format('truetype'),url(fonts/ttn-md.woff2) format('woff2');font-weight:500;font-style:normal;font-display:block}
+@font-face{font-family:'TT Travels Next Trl';src:url(fonts/ttn-xbd.ttf) format('truetype'),url(fonts/ttn-xbd.woff2) format('woff2');font-weight:800;font-style:normal;font-display:block}
 :root{
  /* DEFENCE campaign identity: dark + lime + concrete */
  --yellow:#C4ED2E;--ink:#0E1310;--ink9:#0a0f0c;--ink7:#1a231c;--steel:#8FA396;--steel3:#b8c2ba;--steel4:#8FA396;
@@ -25,30 +25,30 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 #phase{top:30px;right:44px;width:640px;height:150px;text-align:right}
 .ttl{position:absolute;right:0;top:0;width:100%}
 .ttl small{display:block;font-weight:500;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px}
-.ttl b{display:block;font-weight:800;font-size:54px;line-height:.98;letter-spacing:.005em;text-transform:uppercase;color:var(--tx)}
+.ttl b{display:block;font-weight:800;font-size:46px;line-height:1.02;letter-spacing:.005em;text-transform:uppercase;color:var(--tx)}
 /* counter, bottom-left */
 #counter{left:44px;bottom:58px;line-height:1}
-#num{font-weight:800;font-size:132px;letter-spacing:-.02em;color:var(--yellow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;text-shadow:0 0 44px rgba(196,237,46,.22);transform-origin:left bottom;white-space:nowrap}
-#lbl{font-weight:500;font-size:19px;letter-spacing:.01em;color:var(--concrete2);margin-top:10px;white-space:nowrap}
+#num{font-weight:800;font-size:112px;letter-spacing:-.02em;color:var(--yellow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;text-shadow:0 0 44px rgba(196,237,46,.22);transform-origin:left bottom;white-space:nowrap}
+#lbl{font-weight:500;font-size:18px;letter-spacing:.01em;color:var(--concrete2);margin-top:10px;white-space:nowrap}
 #lbl em{font-style:normal;font-weight:800;color:var(--yellow)}
 /* donut + legend */
 #split{display:flex;align-items:center;gap:22px;margin-bottom:22px;opacity:0}
 #pieWrap{position:relative;flex:none}
-#pie{width:156px;height:156px;flex:none;transform:rotate(-90deg);display:block}
+#pie{width:140px;height:140px;flex:none;transform:rotate(-90deg);display:block}
 #pie circle{fill:none;stroke-width:28}
 #aReal{stroke:var(--yellow)}
 #aRecBg{stroke:rgba(143,163,150,.16)}#aNrBg{stroke:url(#hatchP)}
 #aRecL,#aNrL{stroke:var(--yellow)}
-#pieC{position:absolute;left:0;top:0;width:156px;height:156px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;color:var(--tx);opacity:0}
+#pieC{position:absolute;left:0;top:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;color:var(--tx);opacity:0}
 #splitL{display:flex;flex-direction:column;gap:12px}
-.sl{display:flex;align-items:baseline;font-size:17px;color:var(--concrete2);opacity:0;white-space:nowrap}
+.sl{display:flex;align-items:baseline;font-size:15px;color:var(--concrete2);opacity:0;white-space:nowrap}
 .sl s{flex:none;width:14px;height:14px;border-radius:2px;margin-right:12px;text-decoration:none;align-self:center}
-.sl b{color:var(--tx);font-weight:800;font-size:25px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:4.3em}
-.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.1em;font-size:17px}
+.sl b{color:var(--tx);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
+.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.6em;font-size:15px}
 #slReal b,#slReal i{color:var(--yellow)}#slReal s{background:var(--yellow)}
 #slRec s{background:rgba(143,163,150,.16);box-shadow:inset 0 0 0 1.5px var(--steel)}
 #slNr s{background:repeating-linear-gradient(45deg,rgba(158,168,160,.85) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1.5px var(--steel)}
-#src{left:44px;right:44px;bottom:20px;font-size:12.5px;letter-spacing:.02em;color:var(--mut);white-space:nowrap;text-align:left}
+#src{left:44px;right:44px;bottom:20px;font-size:11.5px;letter-spacing:.02em;color:var(--mut);white-space:nowrap;text-align:left}
 #src b{color:var(--tx);font-weight:800}
 #hint{right:44px;bottom:20px;font-size:11px;color:var(--faint)}
 #vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(115% 95% at 55% 42%,transparent 48%,rgba(6,9,7,.76) 100%)}
@@ -169,10 +169,11 @@ function makeLabel(o,it){
     g.strokeStyle=o.occ?'rgba(124,138,128,.5)':'rgba(196,237,46,.62)'; g.lineWidth=3; roundRect(g,8,8,LW-16,LH-16,14); g.stroke();
     g.textAlign='center'; g.textBaseline='middle';
     // name — bigger than before
-    g.fillStyle=o.occ?'#9aa89f':'#F2F7F2'; g.font='500 54px '+FF; g.letterSpacing='1px';
-    g.fillText(name.toUpperCase(),LW/2,62);
+    g.fillStyle=o.occ?'#9aa89f':'#F2F7F2'; g.letterSpacing='1px'; let fs=54; const NM=name.toUpperCase();
+    do{g.font='500 '+fs+'px '+FF;}while(g.measureText(NM).width>LW-56&&--fs>30);
+    g.fillText(NM,LW/2,62);
     // value + direction triangle (up = lime, down = coral) while the number is moving
-    g.font=(small?'500 40px ':'800 74px ')+FF; g.letterSpacing=small?'2px':'0px';
+    let vs=small?40:72; g.letterSpacing=small?'2px':'0px'; do{g.font=(small?'500 ':'800 ')+vs+'px '+FF;}while(g.measureText(txt).width>(dir&&!small?LW-130:LW-56)&&--vs>30);
     const ty=small?136:138;
     if(!small&&dir){
       const tw=g.measureText(txt).width, aw=46, gap=16, x0=LW/2-(tw+aw+gap)/2;
@@ -224,7 +225,7 @@ function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
 function eio(x){x=x<0?0:x>1?1:x;return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
 function oexp(x){x=x<0?0:x>1?1:x;return x===1?1:1-Math.pow(2,-10*x)}
 function camAt(s,cam){const ang=-0.33+s*0.055, k=eio((s-A0)/2.2), rad=118-12*k, elev=71-8*k;
-  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(-12,2,13);}
+  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(-15,2,13);}
 // ---- de-overlap labels across ALL camera poses of the 6 s move ----
 (function relax(){
   const cam=new THREE.PerspectiveCamera(36,16/9,0.1,800);
