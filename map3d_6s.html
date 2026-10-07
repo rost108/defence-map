@@ -154,24 +154,37 @@ const labels=[]; window.__dbg={labels,camera,THREE};
 function centroid(ring){let a=0,cx=0,cy=0;for(let i=0;i<ring.length;i++){const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length];const f=x1*y2-x2*y1;a+=f;cx+=(x1+x2)*f;cy+=(y1+y2)*f;}a*=0.5;return a?[cx/(6*a),cy/(6*a)]:[ring[0][0],ring[0][1]];}
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function fmt(n){return Math.round(n).toLocaleString('uk-UA').replace(/[\s ,]/g,' ')}
-const LW=560,LH=180;
+const LW=560,LH=196;
 function makeLabel(o,it){
   const K=2,cv=document.createElement('canvas');cv.width=LW*K;cv.height=LH*K;const g=cv.getContext('2d');g.scale(K,K);
   const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=MAXA;tex.generateMipmaps=true;tex.minFilter=THREE.LinearMipmapLinearFilter;
   const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0,depthTest:false,depthWrite:false});
-  const sp=new THREE.Sprite(mat);const ar=LW/LH;const hgt=o.occ?2.2:2.85;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
+  const sp=new THREE.Sprite(mat);const ar=LW/LH;const hgt=o.occ?2.4:3.15;sp.scale.set(hgt*ar,hgt,1);sp.renderOrder=10;
   scene.add(sp);
   const name=SHORT[o.name]||o.name; let last=null;
-  function draw(val,closed){
-    const txt=o.occ?'окуповано':(closed?'дані закриті':fmt(val)); const small=o.occ||closed; if(txt===last)return; last=txt;
+  function draw(val,closed,dir){
+    const txt=o.occ?'окуповано':(closed?'дані закриті':fmt(val)); const small=o.occ||closed; const key=txt+'|'+(small?0:dir); if(key===last)return; last=key;
     g.clearRect(0,0,LW,LH);
     g.fillStyle='rgba(10,14,11,.84)'; roundRect(g,8,8,LW-16,LH-16,14); g.fill();
     g.strokeStyle=o.occ?'rgba(124,138,128,.5)':'rgba(196,237,46,.62)'; g.lineWidth=3; roundRect(g,8,8,LW-16,LH-16,14); g.stroke();
     g.textAlign='center'; g.textBaseline='middle';
-    g.fillStyle=o.occ?'#9aa89f':'#dfe8dc'; g.font='500 42px '+FF; g.letterSpacing='2px';
-    g.fillText(name.toUpperCase(),LW/2,58);
-    g.fillStyle=o.occ?'#7c8a80':'#C4ED2E'; g.font=(small?'500 40px ':'800 78px ')+FF; g.letterSpacing=small?'2px':'0px';
-    g.fillText(txt,LW/2,small?122:124);
+    // name — bigger than before
+    g.fillStyle=o.occ?'#9aa89f':'#F2F7F2'; g.font='500 54px '+FF; g.letterSpacing='1px';
+    g.fillText(name.toUpperCase(),LW/2,62);
+    // value + direction triangle (up = lime, down = coral) while the number is moving
+    g.font=(small?'500 40px ':'800 74px ')+FF; g.letterSpacing=small?'2px':'0px';
+    const ty=small?136:138;
+    if(!small&&dir){
+      const tw=g.measureText(txt).width, aw=46, gap=16, x0=LW/2-(tw+aw+gap)/2;
+      g.fillStyle=dir>0?'#C4ED2E':'#F0675C';
+      g.beginPath();
+      if(dir>0){g.moveTo(x0,ty+19);g.lineTo(x0+aw,ty+19);g.lineTo(x0+aw/2,ty-21);}
+      else{g.moveTo(x0,ty-19);g.lineTo(x0+aw,ty-19);g.lineTo(x0+aw/2,ty+21);}
+      g.closePath();g.fill();
+      g.fillStyle=dir>0?'#C4ED2E':'#F2F7F2'; g.textAlign='left'; g.fillText(txt,x0+aw+gap,ty); g.textAlign='center';
+    } else {
+      g.fillStyle=o.occ?'#7c8a80':'#C4ED2E'; g.fillText(txt,LW/2,ty);
+    }
     tex.needsUpdate=true;
   }
   return {sp,mat,draw,o,it};
@@ -250,6 +263,8 @@ const pc=v=>Math.round(v/META.total*100)+'%';
 const U=1000,uReal=META.real/META.total*U,uNr=META.nr?Math.max(META.nr/META.total*U,30):0,uRec=U-uReal-uNr;
 function arc(el,start,len){len=Math.max(0,len);el.setAttribute('stroke-dasharray',len+' '+(U-len));el.setAttribute('stroke-dashoffset',-start);}
 $('slRealP').textContent=pc(META.real);$('slRecP').textContent=pc(META.rec);$('slNrP').textContent=pc(META.nr);pieC.textContent=pc(META.real);
+function labelVal(o,t){if(o.occ)return 0;if(t<A0)return o.n*oexp(t/T_COUNT);
+  return o.n-o.rec*eio((t-A0-o.u*ASP)/AW)-o.nr*eio((t-B0-o.u*BSP)/BW);}
 function rowIn(el,p){el.style.opacity=p;el.style.transform='translateX('+(-10*(1-p))+'px)';}
 function frame(now){
   requestAnimationFrame(frame);
@@ -293,8 +308,10 @@ function frame(now){
       matPaper.opacity=.46*Math.pow(paperAlive,2.2);edgeMat.opacity=.6*Math.pow(paperAlive,1.6);ribPaper.opacity=Math.min(.9,edgeMat.opacity*1.3);it.prib.position.y=it.paper.position.y+0.004;it.prib.visible=it.alive>0.02;}
   });
   const lblFade=ease((s-0.35)/0.5);
-  labels.forEach(L=>{const o=L.o,it=L.it;const val=o.occ?0:(it?o.n-o.rec*it.pA-o.nr*it.pB:o.n);
-    L.draw(val,it&&it.pB>0.97&&o.s===0);
+  labels.forEach(L=>{const o=L.o,it=L.it;
+    const val=labelVal(o,s), dv=val-labelVal(o,s-1/30);   // direction from the timeline itself (deterministic per frame)
+    const dir=Math.abs(dv)>0.5?(dv>0?1:-1):0;
+    L.draw(val,it&&it.pB>0.97&&o.s===0,dir);
     const top=it?(it.hs*rise+(it.hp||0)*rise*Math.max(0.001,it.alive)):0.3;
     L.sp.position.set(L.cx,top+(o.occ?0.9:1.6),-L.cy);L.mat.opacity=(o.occ?0.8:1)*lblFade;});
   const occA=ease((s-A0)/0.9);
