@@ -19,7 +19,7 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 /* brand lockup — canonical: mark + HOBBIT HOUSE (name) + DEFENCE (small label) */
 #brand{top:36px;left:44px;display:flex;align-items:center;gap:14px}
 #logo{width:52px;height:auto;display:block}
-#brand .n{font-weight:800;font-size:30px;letter-spacing:.06em;color:var(--yellow);text-transform:uppercase;line-height:1}
+#brand .n{font-weight:800;font-size:34px;letter-spacing:.06em;color:var(--yellow);text-transform:uppercase;line-height:1}
 #brand .t{font-weight:500;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--concrete2);margin-top:8px}
 /* title, right */
 #phase{display:none}
@@ -28,23 +28,23 @@ body{font-family:var(--ff);font-weight:500;color:var(--tx);-webkit-font-smoothin
 .ttl b{display:block;font-weight:800;font-size:46px;line-height:1.02;letter-spacing:.005em;text-transform:uppercase;color:var(--tx)}
 /* counter, bottom-left */
 #counter{left:44px;top:118px;bottom:56px;line-height:1;display:flex;flex-direction:column;justify-content:space-between}
-#num{font-weight:800;font-size:112px;letter-spacing:-.02em;color:var(--yellow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;text-shadow:0 0 44px rgba(196,237,46,.22);transform-origin:left bottom;white-space:nowrap}
-#lbl{font-weight:500;font-size:23px;letter-spacing:.01em;color:var(--concrete2);margin-top:10px;white-space:nowrap}
+#num{font-weight:800;font-size:128px;letter-spacing:-.02em;color:var(--yellow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;text-shadow:0 0 44px rgba(196,237,46,.22);transform-origin:left bottom;white-space:nowrap}
+#lbl{font-weight:500;font-size:28px;letter-spacing:.01em;color:var(--concrete2);margin-top:10px;white-space:nowrap}
 #lbl em{font-style:normal;font-weight:800;color:var(--yellow)}
 /* donut + legend */
 #split{display:flex;flex-direction:column;align-items:flex-start;gap:20px;opacity:0}
 #pieWrap{position:relative;flex:none}
-#pie{width:190px;height:190px;flex:none;transform:rotate(-90deg);display:block}
+#pie{width:230px;height:230px;flex:none;transform:rotate(-90deg);display:block}
 #pie circle{fill:none;stroke-width:28}
 #aReal{stroke:var(--yellow)}
 #aRecBg{stroke:rgba(143,163,150,.16)}#aNrBg{stroke:url(#hatchP)}
 #aRecL,#aNrL{stroke:var(--yellow)}
-#pieC{position:absolute;left:0;top:0;width:190px;height:190px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:40px;color:var(--tx);opacity:0}
-#splitL{display:flex;flex-direction:column;gap:12px}
-.sl{display:flex;align-items:baseline;font-size:17px;color:var(--concrete2);opacity:0;white-space:nowrap}
-.sl s{flex:none;width:14px;height:14px;border-radius:2px;margin-right:12px;text-decoration:none;align-self:center}
-.sl b{color:var(--tx);font-weight:800;font-size:24px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
-.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.6em;font-size:17px}
+#pieC{position:absolute;left:0;top:0;width:230px;height:230px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:50px;color:var(--tx);opacity:0}
+#splitL{display:flex;flex-direction:column;gap:14px}
+.sl{display:flex;align-items:baseline;font-size:22px;color:var(--concrete2);opacity:0;white-space:nowrap}
+.sl s{flex:none;width:18px;height:18px;border-radius:2px;margin-right:12px;text-decoration:none;align-self:center}
+.sl b{color:var(--tx);font-weight:800;font-size:31px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;min-width:6.1em}
+.sl i{font-style:normal;color:var(--tx);font-weight:800;min-width:3.4em;font-size:22px}
 #slReal b,#slReal i{color:var(--yellow)}#slReal s{background:var(--yellow)}
 #slRec s{background:rgba(143,163,150,.16);box-shadow:inset 0 0 0 1.5px var(--steel)}
 #slNr s{background:repeating-linear-gradient(45deg,rgba(158,168,160,.85) 0 2px,transparent 2px 4.5px);box-shadow:inset 0 0 0 1.5px var(--steel)}
@@ -226,7 +226,7 @@ function ease(x){return x<0?0:x>1?1:1-Math.pow(1-x,3)}
 function eio(x){x=x<0?0:x>1?1:x;return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
 function oexp(x){x=x<0?0:x>1?1:x;return x===1?1:1-Math.pow(2,-10*x)}
 function camAt(s,cam){const ang=-0.27+s*0.025, k=eio((s-A0)/1.6), rad=116-6*k, elev=70-4*k;
-  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(-15,2,13);}
+  cam.position.set(Math.sin(ang)*rad,elev,Math.cos(ang)*rad); cam.lookAt(-21,2,13);}
 // ---- de-overlap labels across ALL camera poses of the 6 s move ----
 (function relax(){
   const cam=new THREE.PerspectiveCamera(36,16/9,0.1,800);
