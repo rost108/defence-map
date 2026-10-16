@@ -3,7 +3,8 @@ import websockets
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 URL=sys.argv[1]; OUT=sys.argv[2]; N=int(sys.argv[3]); FPS=30; W,H=1280,720
 DSF=float(sys.argv[4]) if len(sys.argv)>4 else 1.5
-ONLY=[int(x) for x in sys.argv[5].split(",")] if len(sys.argv)>5 else None
+ONLY=[int(x) for x in sys.argv[5].split(",")] if len(sys.argv)>5 and sys.argv[5] else None
+START=int(sys.argv[6]) if len(sys.argv)>6 else 0
 PORT=9337
 async def main():
     prof=tempfile.mkdtemp(prefix="hhchrome")
@@ -43,7 +44,7 @@ async def main():
             await call("Runtime.evaluate",{"expression":"dispatchEvent(new KeyboardEvent('keydown',{key:'r'}))"})
             os.makedirs(OUT,exist_ok=True)
             t0=time.time()
-            for i in range(N):
+            for i in range(START,N):
                 await call("Runtime.evaluate",{"expression":f"window.__recT={i*1000.0/FPS}"})
                 await call("Emulation.setVirtualTimePolicy",{"policy":"advance","budget":1000.0/FPS})
                 await wait_event("Emulation.virtualTimeBudgetExpired")
